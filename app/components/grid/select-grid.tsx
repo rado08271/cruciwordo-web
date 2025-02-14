@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import Cell from "~/components/cells/cell";
+import Cell from "~/components/items/cell";
 
 type Props = {
     rows: number

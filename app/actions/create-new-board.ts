@@ -1,4 +1,13 @@
 import {create} from "zustand";
+import type {BoardModel} from "~/types/board";
+
+type GetBoardState = {
+    board: BoardModel
+    boardId?: string
+    initBoard: (board: BoardModel) => void
+    fetchBoardById: (boardId: string) => string
+}
+
 
 const useCreateNewBoard = create((set) => ({
     fishies: {},
