@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer {
+  .no-gradient {
+    @apply bg-indigo-50;
+  }
+
+  .has-gradient {
+    @apply bg-white dark:bg-gray-950;
+    @apply from-red-300 to-violet-400;
+    @apply dark:from-blue-600 dark:to-slate-600;
+    @apply bg-gradient-to-r;
+  }
+}
+
+:root {
+    font-family: "Geist", serif;
+    --is-gradient: gradient;
+}
+
+html,
+body {
+  @apply no-gradient;
+  /*@apply has-gradient;*/
+  @apply w-full h-full;
+  @apply p-0 m-0 absolute;
+
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+
+  color-scheme: light;
+
+  background-size: 200% 200%;
+  -webkit-animation: scroll-bg 7s ease infinite;
+  -moz-animation: scroll-bg 7s ease infinite;
+  animation: scroll-bg 7s ease infinite;
+}
+
+@-webkit-keyframes scroll-bg {
+  0%{background-position:10% 0}
+  50%{background-position:91% 100%}
+  100%{background-position:10% 0}
+}
+@-moz-keyframes scroll-bg {
+  0%{background-position:10% 0}
+  50%{background-position:91% 100%}
+  100%{background-position:10% 0}
+}
+@keyframes scroll-bg {
+  0%{background-position:10% 0}
+  50%{background-position:91% 100%}
+  100%{background-position:10% 0}
+}
