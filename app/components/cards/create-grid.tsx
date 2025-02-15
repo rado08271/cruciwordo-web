@@ -1,13 +1,15 @@
 import Card from "~/components/common/card/card";
 import TextInput from "~/components/common/input/text-input";
 import OutlinedContainer from "~/components/common/container/outlined-container";
-import {TfiLayoutGrid2, TfiSave} from "react-icons/tfi";
+import {TfiLayoutGrid2, TfiSave, TfiLoop} from "react-icons/tfi";
 import Slider from "~/components/common/input/slider";
 import {useEffect, useState} from "react";
 import SelectGrid from "~/components/grid/select-grid";
 import {BsArrowsCollapse} from "react-icons/bs";
 import PrimaryButton from "~/components/common/buttons/primary-button";
-import createNewBoard from "~/api/create-new-board";
+import useBearStore from "~/actions/useBearStore";
+import useCreateNewBoardStore from "~/actions/create-new-board";
+import { useNavigate } from "react-router";             // TODO Update with action redirect
 
 const MAX_ROWS = 10
 const MAX_COLS = 10
@@ -18,7 +20,10 @@ const CreateGrid = () => {
     const [rows, onSelectRows] = useState(3)
     const [cols, onSelectCols] = useState(3)
     const [showMore, setShowMore] = useState(false)
-    const [loading, setLoading] = useState(false)
+
+    const navigator = useNavigate()
+
+    const {createBoard, boardInProgress, boardId} = useCreateNewBoardStore();
 
     useEffect(() => {
         console.log("C", cols, "R", rows, "S", solution, (rows) * (MAX_ROWS) + (cols))
@@ -48,6 +53,12 @@ const CreateGrid = () => {
         }
     }, [rows, cols, solution]);
 
+    useEffect(() => {
+        if (!boardInProgress && boardId) {
+            navigator(`/play/${boardId}`)
+        }
+    }, [boardId]);
+
     return (
         <>
             <Card>
@@ -76,9 +87,9 @@ const CreateGrid = () => {
                     {<label htmlFor={'text-input'} className={'text-sm text-red-500 text-right min-h-8'}>{error ?? ''}</label>}
 
                     <span onClick={() => {
-                        createNewBoard(solution, rows, cols)
+                        createBoard(solution, rows, cols)
                     }}>
-                        <PrimaryButton disabled={error != null} id={'create-board'} icon={<TfiSave/>}>Create Puzzle</PrimaryButton>
+                        <PrimaryButton disabled={error != null || boardInProgress} id={'create-board'} icon={!boardInProgress ? <TfiSave/> : <TfiLoop/>}>Create Puzzle</PrimaryButton>
                     </span>
                 </Card.Content>
             </Card>

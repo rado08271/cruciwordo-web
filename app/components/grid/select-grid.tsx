@@ -45,7 +45,6 @@ const SelectGrid = ({rows, cols, onSelect, onHover, overrideCols = null, overrid
                                 if (onSelect) {
                                     setOnSelected(cell)
                                     onSelect(cell)
-                                    console.log(cellId, cell)
                                 }
                             }} onHover={(cell) => {
                                 if (onHover) {
