@@ -5,7 +5,7 @@ import {boardDTOToModel} from "~/types/board";
 const OK = 200 | 201 | 204
 
 const getBoardById = async (id: string = "JAcShjrig8"): Promise<BoardModel>  => {
-    const axiosResponse = axios.get(`http://localhost:3000/api/${id}`)
+    const axiosResponse = axios.get(`https://${import.meta.env.API_URL}:${import.meta.env.API_PORT}/api/${id}`)
 
     const response = await axiosResponse;
 
