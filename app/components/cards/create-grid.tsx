@@ -11,8 +11,8 @@ import useBearStore from "~/actions/useBearStore";
 import useCreateNewBoardStore from "~/actions/create-new-board";
 import { useNavigate } from "react-router";             // TODO Update with action redirect
 
-const MAX_ROWS = 10
-const MAX_COLS = 10
+const MAX_ROWS = 20
+const MAX_COLS = 20
 
 const CreateGrid = () => {
     const [solution, onSetSolution] = useState("")
