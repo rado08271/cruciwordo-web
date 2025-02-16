@@ -2,7 +2,6 @@
 import React, {useEffect, useState} from 'react';
 import type {BoardModel} from "~/types/board";
 import {animated, useIsomorphicLayoutEffect, useSpring, useSprings} from '@react-spring/web'
-import cell from "~/components/items/cell";
 import {BsEye, BsEyeSlash} from "react-icons/bs";
 import OutlinedContainer from "~/components/common/container/outlined-container";
 import type {Direction, HistoryModel} from "~/types/history";

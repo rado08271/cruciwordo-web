@@ -25,7 +25,7 @@ const SelectGrid = ({rows, cols, onSelect, onHover, overrideCols = null, overrid
     }
 
     return (
-        <section className={'flex flex-col gap-0.5 justify-center overflow-hidden select-none cursor-grab'}>
+        <section className={'flex flex-col gap-0.5 justify-center select-none cursor-grab'}>
 
             {array.map((row, rowId) =>
                 <div className={'flex flex-row gap-0.5 justify-center overflow-hidden flex-nowrap'}>
