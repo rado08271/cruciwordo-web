@@ -27,9 +27,9 @@ body {
   @apply w-full h-full;
   @apply p-0 m-0 absolute;
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  /*@media (prefers-color-scheme: dark) {*/
+  /*  color-scheme: dark;*/
+  /*}*/
 
   color-scheme: light;
 
