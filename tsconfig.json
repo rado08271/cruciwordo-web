@@ -15,7 +15,8 @@
     "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": ["./app/*"],
+      "@spacetime": ["./app/spacetime_bridge"]
     },
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,

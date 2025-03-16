@@ -1,52 +1,15 @@
 "use client"
-import React, {useEffect, useState} from 'react';
-import type {BoardModel} from "~/types/board";
-import {animated, useIsomorphicLayoutEffect, useSpring, useSprings} from '@react-spring/web'
-import {BsEye, BsEyeSlash} from "react-icons/bs";
-import OutlinedContainer from "~/components/common/container/outlined-container";
-import type {Direction, HistoryModel} from "~/types/history";
-import {getDirectionVectorPath} from "~/types/history";
-import {remove} from "@jridgewell/set-array";
+import React, {useState} from 'react';
+import {animated} from '@react-spring/web'
 
 type Props = {
-    board: BoardModel,
-    gameWonListener: (gameWon: boolean) => void
+    grid: string[][],
 }
 
-const MoveGrid = ({board: {grid, rows, history}, gameWonListener}: Props) => {
+const MoveGrid = ({grid}: Props) => {
     const [selectedCells, setSelectCells] = useState<[number, number][]>([])
     const [hoveredCells, setHoveredCells] = useState<[number, number][]>([])
     const [removedCells, setRemovedCells] = useState<[number, number][]>([])
-    const [showMore, setShowMore] = useState(false)
-    const [gameWon, setGameWon] = useState(false)
-
-    const [wordsHistory, setWordsHistory] = useState<{words: string, found: boolean}[]>(history.map<{words: string, found: boolean}>(
-        value => ({
-            words: value.word,
-            found: false
-        })
-    ))
-
-    const [wordSpring, wordsApi] = useSpring({from: {opacity: 0}}, [showMore])
-    const [rowStyles, api] = useSprings(rows, (i) => ({
-        from: {opacity: 0},
-    }), [])
-
-    useIsomorphicLayoutEffect(() => {
-        api.start((i, ctrl) => (
-            {to: {opacity: 1}, delay: i * 200}
-        ));
-    }, []);
-
-    useIsomorphicLayoutEffect(() => {
-        if (showMore) {
-            wordsApi.start(
-                {to: {opacity: 1}}
-            )
-        } else {
-            wordsApi.start({to: {opacity: 0}})
-        }
-    }, [showMore])
 
     const getAffectedCells = (startRow: number, startCol: number, endRow: number, endCol: number): [number, number][] => {
         const cells: [number, number][] = []
@@ -81,7 +44,6 @@ const MoveGrid = ({board: {grid, rows, history}, gameWonListener}: Props) => {
             ) {
                 const newSelectedCells = getAffectedCells(startRow, startCol, row, col)
                 setSelectCells(newSelectedCells)
-                checkWord(newSelectedCells)
             } else {
                 setSelectCells([[row, col]])
             }
@@ -120,84 +82,80 @@ const MoveGrid = ({board: {grid, rows, history}, gameWonListener}: Props) => {
         }
     }
 
-    const checkWordAgainstSequence = (step: HistoryModel, sequence: [number, number][]): boolean => {
-        const {word, row, col, direction} = step;
-        const depth = word.length
+    // const checkWordAgainstSequence = (step: HistoryModel, sequence: [number, number][]): boolean => {
+    //     const {word, row, col, direction} = step;
+    //     const depth = word.length
+    //
+    //     // make sure first that we selected same number of cells
+    //     if (sequence.length != depth) {
+    //         return false
+    //     }
+    //
+    //     const [rowVector, colVector] = getDirectionVectorPath(direction)
+    //
+    //     console.log(
+    //         '\nWorking on \n',
+    //         word,
+    //         sequence.length,
+    //         word.length,
+    //         direction,
+    //         "\nStart Word\n",
+    //         row,
+    //         col,
+    //         "\nEnd Word\n",
+    //         row + (rowVector * (depth - 1)),
+    //         col + (colVector * (depth - 1)),
+    //         "\nStart Sequence\n",
+    //         sequence[0][0],
+    //         sequence[0][1],
+    //         "\nEnd Sequence\n",
+    //         sequence[sequence.length - 1][0],
+    //         sequence[sequence.length - 1][1]
+    //     )
+    //
+    //     for (let depthIdx = 0; depthIdx < depth; depthIdx++) {
+    //         const [sequenceStartRow, sequenceStartCol] = sequence[depthIdx]
+    //         const [sequenceEndRow, sequenceEndCol] = sequence[(sequence.length - 1) - depthIdx]
+    //
+    //         let currentRow = row + (rowVector * depthIdx)
+    //         let currentCol = col + (colVector * depthIdx)
+    //
+    //         if (
+    //             (sequenceStartRow == currentRow && sequenceStartCol == currentCol) ||
+    //             (sequenceEndRow == currentRow && sequenceEndCol == currentCol)
+    //         ) {
+    //
+    //         } else {
+    //             return false
+    //         }
+    //     }
+    //
+    //     // TODO : case word is part of word of other word
+    //     return true
+    // }
 
-        // make sure first that we selected same number of cells
-        if (sequence.length != depth) {
-            return false
-        }
-
-        const [rowVector, colVector] = getDirectionVectorPath(direction)
-
-        // console.log(
-        //     '\nWorking on \n',
-        //     word,
-        //     sequence.length,
-        //     word.length,
-        //     direction,
-        //     "\nStart Word\n",
-        //     row,
-        //     col,
-        //     "\nEnd Word\n",
-        //     row + (rowVector * (depth - 1)),
-        //     col + (colVector * (depth - 1)),
-        //     "\nStart Sequence\n",
-        //     sequence[0][0],
-        //     sequence[0][1],
-        //     "\nEnd Sequence\n",
-        //     sequence[sequence.length - 1][0],
-        //     sequence[sequence.length - 1][1]
-        // )
-
-        for (let depthIdx = 0; depthIdx < depth; depthIdx++) {
-            const [sequenceStartRow, sequenceStartCol] = sequence[depthIdx]
-            const [sequenceEndRow, sequenceEndCol] = sequence[(sequence.length - 1) - depthIdx]
-
-            let currentRow = row + (rowVector * depthIdx)
-            let currentCol = col + (colVector * depthIdx)
-
-            if (
-                (sequenceStartRow == currentRow && sequenceStartCol == currentCol) ||
-                (sequenceEndRow == currentRow && sequenceEndCol == currentCol)
-            ) {
-
-            } else {
-                return false
-            }
-        }
-
-        // TODO : case word is part of word of other word
-        return true
-    }
-
-    const checkWord = (cells: [number, number][]) => {
-        const word = cells.map(([row, col]) => grid[row][col].value).join("")
-        const reversedWord = word.split("").reverse().join("")
-        const [startingPositionRow, startingPositionCol] = cells[0]
-
-        const includesWord = history.find(word => checkWordAgainstSequence(word, cells))
-
-        // word was found
-        if (includesWord) {
-            setRemovedCells(prevState => [...prevState, ...cells])
-            setWordsHistory(prevState => {
-                const wordIndex = prevState.findIndex(value => value.words === includesWord.word)
-                prevState.at(wordIndex).found = true
-
-                if (prevState.filter(word => !word.found).length == 0) {
-                    setGameWon(true)
-                }
-
-                return prevState
-            })
-        }
-    }
-
-    useEffect(() => {
-        gameWonListener(gameWon)
-    }, [gameWon]);
+    // const checkWord = (cells: [number, number][]) => {
+    //     const word = cells.map(([row, col]) => grid[row][col].value).join("")
+    //     const reversedWord = word.split("").reverse().join("")
+    //     const [startingPositionRow, startingPositionCol] = cells[0]
+    //
+    //     const includesWord = history.find(word => checkWordAgainstSequence(word, cells))
+    //
+    //     // word was found
+    //     if (includesWord) {
+    //         setRemovedCells(prevState => [...prevState, ...cells])
+    //         setWordsHistory(prevState => {
+    //             const wordIndex = prevState.findIndex(value => value.words === includesWord.word)
+    //             prevState.at(wordIndex).found = true
+    //
+    //             if (prevState.filter(word => !word.found).length == 0) {
+    //                 setGameWon(true)
+    //             }
+    //
+    //             return prevState
+    //         })
+    //     }
+    // }
 
     const isCellSelected = (row: number, col: number) => {
         return selectedCells.some(([r, c]) => r === row && c === col)
@@ -211,54 +169,26 @@ const MoveGrid = ({board: {grid, rows, history}, gameWonListener}: Props) => {
     }
 
     return (
-        <div className={'flex flex-col gap-8'}>
-
-            <section className={'flex flex-col gap-0.5 justify-center overflow-hidden select-none items-center'}>
+        <div className={'relative flex justify-center'}>
+            <section style={{gridTemplateColumns: `repeat(${grid.length}, minmax(0, 1fr))`}} className={`grid gap-1 p-4 overflow-hidden rounded-xl select-none bg-sky-50`}>
                 {
-                    rowStyles.map((style, rowId, array) =>
-                        <animated.div style={style} className={'flex flex-row gap-0.5 w-full justify-between'}>
-                            {
-                                grid[rowId].map((cell, colId) => {
-                                    return <article
-                                        onClick={() => handleCellClick(rowId, colId)}
-                                        onMouseOver={() => handleCellMovement(rowId, colId)}
-                                        className={`flex flex-col justify-center border-2 w-full ${isCellRemoved(rowId, colId) ? 'text-red-500' : ''} ${isCellSelected(rowId, colId) ? 'bg-slate-500' : (isCellHovered(rowId, colId) ? 'bg-slate-300' : '')}`}>
-                                        {/*<div className={'flex text-center justify-center text-sm flex-row'}>*/}
-                                        {/*    <div className={'flex-1'}>{rowId + 1}</div>*/}
-                                        {/*    <div className={'flex-1'}>{colId + 1}</div>*/}
-                                        {/*</div>*/}
-                                        <div className={'justify-center text-xl items-center text-center'}>
-                                            <div>{cell.value}</div>
-                                        </div>
-                                        {/*<div className={'justify-center text-sm items-center text-center'}>*/}
-                                        {/*    <div>{cell.solution ? "true" : "false"}</div>*/}
-                                        {/*</div>*/}
-                                    </article>
-                                })
-                            }
-                        </animated.div>
-                    )
+                    grid.map( (row, rowId) => row.map((cell, colId) => {
+                        return <article
+                            onClick={() => handleCellClick(rowId, colId)}
+                            onMouseOver={() => handleCellMovement(rowId, colId)}
+                            className={`col-span-1 rounded-sm border-2 border-sky-200 bg-white aspect-square w-7 h-7 ${isCellRemoved(rowId, colId) ? 'text-red-500' : ''} ${isCellSelected(rowId, colId) ? 'bg-sky-300' : (isCellHovered(rowId, colId) ? 'bg-sky-200' : '')}`}>
+                            <div
+                                className={'flex w-full h-full justify-center text-lg font-mono text-center text-sky-600'}>
+                                {cell}
+                            </div>
+                        </article>
+                    }))
                 }
-            </section>
-            <section>
-                <div onClick={() => setShowMore(!showMore)}
-                     className={'w-full gap-2 text-center inline-flex justify-center items-center text-blue-400 cursor-pointer'}>
-                    <span>{showMore ? <BsEyeSlash/> : <BsEye/>}</span>
-                    <h1>{showMore ? "Hide" : "Show"}&nbsp;All Words</h1>
-                </div>
-
-                {<animated.div style={wordSpring}>
-                    <OutlinedContainer className={'flex w-full flex-wrap gap-1 overflow-hidden'}>
-                        {history ? wordsHistory.map((word, index) =>
-                            <span className={`${word.found ? "text-green-500" : ''}`} key={word.words}>
-                                {word.words}
-                            </span>
-                        ) : <></>}
-                    </OutlinedContainer>
-                </animated.div>}
             </section>
         </div>
     )
 };
 
 export default MoveGrid;
+
+

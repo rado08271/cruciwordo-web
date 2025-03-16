@@ -1,10 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&family=League+Gothic&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer {
   .no-gradient {
-    @apply bg-indigo-50;
+    @apply bg-transparent;
   }
 
   .has-gradient {
@@ -16,7 +18,7 @@
 }
 
 :root {
-    font-family: "Geist", serif;
+  font-family: "Albert Sans", "Noto Sans", "League Gothic", sans-serif;
     --is-gradient: gradient;
 }
 
@@ -32,8 +34,9 @@ body {
   /*}*/
 
   color-scheme: light;
+  overflow-x: hidden;
 
-  background-size: 200% 200%;
+  background: url("./assets/concrete_wall_with_blue_sky.jpeg");
   -webkit-animation: scroll-bg 7s ease infinite;
   -moz-animation: scroll-bg 7s ease infinite;
   animation: scroll-bg 7s ease infinite;
