@@ -1,10 +1,12 @@
-import React, {useState} from "react";
+import React, {Reducer, useEffect, useState} from "react";
 import useConnection from "~/hooks/use-connection";
-import GenerateNewBoard from "~/api/reducers/generate-new-board";
 import {IoCogSharp, IoGridSharp, IoKeySharp, IoLanguageSharp} from "react-icons/io5";
 import MoveGrid from "~/components/grid/move-grid";
 import Loading from "~/components/common/loading/loading";
 import {useNavigate} from "react-router";
+import {GenerateNewBoard} from '~/api/reducers'
+import {SubscribeToBoardNew} from "~/api/subscribers/subscribe-to-board-new";
+import {Identity} from "@clockworklabs/spacetimedb-sdk";
 
 type SupportedLangType = { language: string, i18n: string, id: string }
 type SupportedGridSize = {
@@ -44,34 +46,31 @@ const CreateGrid = () => {
     const [error, setError] = useState<string | null>()
     const [isLoading, setIsLoading] = useState(false)
 
+    useEffect(() => {
+        if (connectionState === "CONNECTED" && conn) {
+            SubscribeToBoardNew(conn, Identity.fromString(localStorage.getItem('identity')))
+        }
+    }, [conn, connectionState]);
+
     const createBoard = (solution: string, rows: number, cols: number) => {
         if (conn) {
             setIsLoading(true);
-            const start = new Date()
-            const stop = GenerateNewBoard.builder()
+            const generateNewBoard = GenerateNewBoard.builder()
                 .addConnection(conn)
                 .addOnSuccess(() => {
                     console.log("board was created")
-                    const remaining = Date.now() - start;
-                    setTimeout(() => {
-                        setIsLoading(true);
-                        navigator('/create')
-
-                    }, remaining < 0 ? 0 : remaining)
+                    setIsLoading(false);
                 })
                 .addOnError((generateError) => {
                     setError(generateError.message);
                     console.error("board error", generateError)
                 })
-                .execute({
-                    cols: rows,
-                    rows: cols,
-                    message: solution
-                })
+                .build()
 
+            generateNewBoard.execute(rows, cols, solution)
 
             setTimeout(() => {
-                stop("Stopping the listener")
+                console.log("Stopping the listener")
             }, 3000)
         }
     }

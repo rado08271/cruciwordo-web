@@ -18,8 +18,16 @@ const useConnection = (): [typeof DbConnection | null, ConnectionState] => {
                 .withUri('ws://localhost:3000')
                 .withModuleName('cruciwordo')
                 .withToken(localStorage.getItem('token') || '')
-                .onConnect((connection: typeof DbConnection, identity: Identity, token: string) => {
+                .onConnect((connection: DbConnection, identity: Identity, token: string) => {
                     localStorage.setItem('token', token)
+                    localStorage.setItem('identity', identity.toHexString())
+
+                    console.log('identity', identity)
+                    connection.subscriptionBuilder()
+                        .onApplied(ctx => {
+                            console.log("user boards", ctx.db.board.count())
+                        })
+                        .subscribe(`SELECT * FROM board WHERE created_by = '87749965386410529147125650381150036498542690511605788654083790035634710909461n'`)
 
                     setConnectionState("CONNECTED")
                 })

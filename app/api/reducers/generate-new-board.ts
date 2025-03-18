@@ -1,59 +1,26 @@
-import {DbConnection, type ReducerEventContext} from "@spacetime";
+import {ReducerBuilderImpl, ReducerImpl} from "~/api/reducers/reducer";
 
-type GenerateNewBoardParams = {
-    rows: number,
-    cols: number,
-    message: string
+interface IGenerateNewBoard {
+    execute: (rows: number, cols: number, message: string) => void
+    stop: () => void
 }
 
-class GenerateNewBoard {
-    private onErrorListener?: (error: Error) => void
-    private onSuccessListener?: () => void
-    private conn?: DbConnection
-
-    private constructor() {}
-
-    public static builder = (): GenerateNewBoard =>  {
-        return new GenerateNewBoard();
+class GenerateNewBoard extends ReducerImpl implements IGenerateNewBoard {
+    static builder = (): ReducerBuilderImpl<GenerateNewBoard> => {
+        return new ReducerBuilderImpl<GenerateNewBoard>((reducer: ReducerImpl) => {
+            return new GenerateNewBoard(reducer.conn, reducer.onSuccessListener, reducer.onErrorListener)
+        });
     }
 
-    public addOnSuccess = (callback: () => void): GenerateNewBoard => {
-        this.onSuccessListener = callback;
-        return this
-    }
-
-    public addOnError = (callback: (error: Error) => void): GenerateNewBoard => {
-        this.onErrorListener = callback;
-        return this
-    }
-
-    public addConnection = (conn: DbConnection): GenerateNewBoard => {
-        this.conn = conn;
-        return this
-    }
-
-    public execute = (params: GenerateNewBoardParams) => (message: string) => {
-        if (!this.conn) throw Error("Connection is not available")
-
+    public execute = ( rows: number, cols: number, message: string) => {
         this.conn.reducers.onGenerateNewBoard(this.defaultReducerCallback)
 
-        this.conn.reducers.generateNewBoard(params.rows, params.cols, params.message)
-
-        return this.stop
+        this.conn.reducers.generateNewBoard(rows, cols, message)
     }
 
-    private defaultReducerCallback = (ctx: ReducerEventContext) => {
-        if (this.onSuccessListener && ctx.event.status.tag === "Committed") {
-            this.onSuccessListener()
-        } else if (this.onErrorListener && ctx.event.status.tag === "Failed"){
-            this.onErrorListener(new Error(ctx.event.status.value))
-        }
-    }
-
-    private stop = (message: string) => {
-        if (!this.conn) throw Error("Connection is not available")
+    public stop = () => {
         this.conn.reducers.removeOnGenerateNewBoard(this.defaultReducerCallback)
     }
 }
 
-export default GenerateNewBoard
+export default GenerateNewBoard;
