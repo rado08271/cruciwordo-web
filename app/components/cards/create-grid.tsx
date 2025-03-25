@@ -1,12 +1,21 @@
 import React, {Reducer, useEffect, useState} from "react";
 import useConnection from "~/hooks/use-connection";
-import {IoCogSharp, IoGridSharp, IoKeySharp, IoLanguageSharp} from "react-icons/io5";
+import {
+    IoCogSharp,
+    IoGridSharp,
+    IoKeySharp,
+    IoLanguageSharp,
+    IoShareSharp,
+    IoArrowForwardSharp,
+    IoShare, IoShareSocialSharp, IoCopySharp, IoCopy, IoArrowForwardCircle, IoArrowForward, IoShareSocial
+} from "react-icons/io5";
 import MoveGrid from "~/components/grid/move-grid";
 import Loading from "~/components/common/loading/loading";
 import {useNavigate} from "react-router";
 import {GenerateNewBoard} from '~/api/reducers'
 import {SubscribeToBoardNew} from "~/api/subscribers/subscribe-to-board-new";
 import {Identity} from "@clockworklabs/spacetimedb-sdk";
+import type {BoardDatabaseModel, DbConnection} from "@spacetime";
 
 type SupportedLangType = { language: string, i18n: string, id: string }
 type SupportedGridSize = {
@@ -41,14 +50,23 @@ const CreateGrid = () => {
     const [tabName, setTabName] = useState<TabName>('SETTINGS')
 
     const [conn, connectionState] = useConnection()
-    const navigator = useNavigate();
+    const [newBoard, setNewBoard] = useState<BoardDatabaseModel | null>(null)
+
+    const nav = useNavigate()
 
     const [error, setError] = useState<string | null>()
     const [isLoading, setIsLoading] = useState(false)
+    const [isCopied, setIsCopied] = useState(false)
 
     useEffect(() => {
         if (connectionState === "CONNECTED" && conn) {
-            SubscribeToBoardNew(conn, Identity.fromString(localStorage.getItem('identity')))
+            const sub = SubscribeToBoardNew(conn, Identity.fromString(localStorage.getItem('identity')), board => {
+                console.log('board', board)
+                setNewBoard(board)
+
+                // no reason to stay subscribed
+                sub.unsubscribe()
+            })
         }
     }, [conn, connectionState]);
 
@@ -94,12 +112,43 @@ const CreateGrid = () => {
             {isLoading && <div className={'absolute flex w-screen h-screen backdrop-blur justify-center items-center'}>
                 <Loading/>
             </div>}
+            {newBoard && <div className={'absolute flex w-screen h-screen backdrop-blur justify-center items-center'}>
+                <section className={'p-4 bg-white drop-shadow-xl rounded-xl text-stone-600 flex flex-col gap-2'}>
+                    <h1 className={'font-header text-center text-3xl'}>Board was created</h1>
+                    <div className={'relative flex flex-col text-stone-600 items-center gap-4'}>
+                        <div
+                            className={'flex flex-row justify-center items-center gap-2 border-sky-300 border-2 py-1 px-2 rounded'}>
+                            <p className={'select-all text-sm '}>cruciwordo.com/play/{newBoard?.id}</p>
+                            <div className={''}>
+                                <IoCopy onClick={() => {
+                                    navigator.clipboard.writeText(`cruciwordo.com/play/${newBoard?.id}`)
+
+                                    setIsCopied(true)
+                                    setTimeout(() => {
+                                        setIsCopied(false)
+                                    }, 4000)
+                                }} className={'cursor-pointer transition duration-300 ease-in-out hover:text-sky-500'}/>
+                                {isCopied && <div
+                                    className={'absolute w-full text-xs left-0 right-0 top-0 text-center -translate-y-full p-1 backdrop-blur bg-gradient-to-br from-slate-200 to-slate-50 rounded bg-opacity-0 transition duration-1000 ease-in-out'}>Copied
+                                    to clipboard</div>}
+                            </div>
+                        </div>
+                        <div className={'flex flex-row text-2xl justify-around w-full items-center rounded'}>
+                            <IoShareSocial
+                                className={'text-xl cursor-pointer transition duration-300 ease-in-out hover:text-sky-500 hover:scale-125'}/>
+                            <IoArrowForward onClick={() => {
+                                nav(`/play/${newBoard?.id}`)
+                            }} className={'cursor-pointer transition duration-300 ease-in-out hover:text-sky-500 hover:scale-125'}/>
+                        </div>
+                    </div>
+                </section>
+            </div>}
             <div className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center p-24'}>
                 <form onSubmit={(event) => {
                     event.preventDefault();
                     createBoard(solution, gridSize.rows, gridSize.cols)
                 }}
-                      className={`text-stone-00 min-w-1/3 bg-white rounded-xl p-8 flex-col gap-4 justify-around flex`}>
+                      className={`text-stone-600 min-w-1/3 bg-white rounded-xl p-8 flex-col gap-4 justify-around flex`}>
                     <section className={'flex flex-col items-center text-center'}>
                         <h1 className={'font-header text-3xl'}>Create new cruciwordo puzzle</h1>
                         <h1 className={'text-md'}>Create your own 8-way word search puzzle with a hidden

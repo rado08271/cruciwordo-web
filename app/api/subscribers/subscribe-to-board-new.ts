@@ -1,21 +1,36 @@
-import type {DbConnection} from "@spacetime";
 import type {Identity} from "@clockworklabs/spacetimedb-sdk";
-import {BoardDatabaseModel} from "@spacetime";
+import type {BoardDatabaseModel, DbConnection, EventContext} from "@spacetime";
 
-export const SubscribeToBoardNew = (conn: DbConnection, id: Identity) => {
-    console.log("board status", conn.isActive)
-    // conn.subscriptionBuilder()
-    //     .onApplied(ctx => {
-    //         console.log("user boards", ctx.db.board.count())
-    //     })
-    //     .subscribe(`SELECT * FROM board WHERE createdBy = '${id}'`)
+type Subscription = {
+    // getData: () => Subscription
+    unsubscribe: () => void
+}
 
-    // conn.db.board.onInsert((ctx, row) => {
-    //     console.log("Event tag", ctx.event.tag)
-    //     console.log("New created row", row)
-    // })
-    // conn.db.board.onUpdate((ctx, row) => {
-    //     console.log("Event tag", ctx.event.tag)
-    //     console.log("New updated row", row)
-    // })
+const SQL= (identity: Identity) => `SELECT * FROM board WHERE created_by = 0x${identity.data.toString(16)}`
+export const SubscribeToBoardNew = (conn: DbConnection, identity: Identity, callback: (board: BoardDatabaseModel) => void): Subscription => {
+    if (!conn.isActive) throw Error("The connection is not active and subscription was stopped")
+
+    const sqlQuery = `SELECT * FROM board WHERE created_by = 0x${identity.data.toString(16)}`
+    const onInsertNewBoard = (context: EventContext, row: BoardDatabaseModel) => {
+        if (context.event.tag === "Reducer") {
+            callback(row)
+        }
     }
+
+    const subscription = conn.subscriptionBuilder()
+        .onApplied(ctx => {
+            console.log("Successfully synced")
+
+            ctx.db.board.onInsert(onInsertNewBoard)
+        })
+        .subscribe(sqlQuery)
+
+    return {
+        unsubscribe: () => {
+            console.log('unsub')
+            subscription.unsubscribeThen(ctx => {
+                ctx.db.board.removeOnInsert(onInsertNewBoard)
+            })
+        }
+    }
+}
