@@ -1,52 +1,33 @@
 import {useEffect, useState} from "react";
 import {DbConnection} from "@spacetime";
-import type {ErrorContext} from "@spacetime";
-import {Identity} from "@clockworklabs/spacetimedb-sdk";
-
-type ConnectionState = "NONE" | "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "FAILED"
+import {Connection, type ConnectionState} from "~/api/connection";
 
 const useConnection = (): [typeof DbConnection | null, ConnectionState] => {
     const [conn, setConnection] = useState<typeof DbConnection | null>(null)
     const [connectionState, setConnectionState] = useState<ConnectionState>("NONE")
-    const [error, setError] = useState<Error | undefined>()
+    const [connectionError, setConnectionError] = useState<Error | undefined>()
 
     useEffect(() => {
-        setConnectionState("CONNECTING");
-
-
-        DbConnection.builder()
-            .withUri('ws://localhost:3000')
-            .withModuleName('cruciwordo')
-            .withToken(localStorage.getItem('token') || '')
-            .onConnect((connection: DbConnection, identity: Identity, token: string) => {
-                localStorage.setItem('token', token)
-                sessionStorage.setItem('identity', identity.toHexString())
-
-                if (connection.isActive)
-                    setConnectionState("CONNECTED")
-                    setConnection(connection)
+        const connection = new Connection()
+            .addOnConnect((connection) => {
+                console.log("======== DB Connected successfully")
+                setConnection(connection)
             })
-            .onDisconnect((errorCtx: ErrorContext, error?: Error) => {
-                setConnectionState("DISCONNECTED")
-                setError(error)
+            .addOnError((error) => {
+                console.error("======== DB error", error)
+                setConnectionError(error)
             })
-            .onConnectError((errorCtx: ErrorContext, error?: Error) => {
-                setConnectionState("FAILED")
-                setError(error)
+            .addOnStateChangeListener(state => {
+                console.log("======== DB stated changeds", state)
+                setConnectionState(state)
             })
-            .build()
 
-    }, [])
+        connection.connect()
 
-    useEffect(() => {
-        console.log("=> Connection state is ", connectionState)
-    }, [connectionState])
-
-    useEffect(() => {
-        if (error) {
-            console.error("=> SpacetimeDb Error ", error)
+        return () => {
+            connection.disconnect()
         }
-    }, [error])
+    }, [])
 
     return [conn, connectionState]
 }

@@ -1,4 +1,4 @@
-import React, {Reducer, useEffect, useState} from "react";
+import React, {Reducer, useCallback, useEffect, useMemo, useState} from "react";
 import useConnection from "~/hooks/use-connection";
 import {
     IoCogSharp,
@@ -71,7 +71,7 @@ const CreateGrid = () => {
     }, [conn, connectionState]);
 
     const createBoard = (solution: string, rows: number, cols: number) => {
-        if (conn) {
+        if (conn && connectionState === "CONNECTED") {
             setIsLoading(true);
             const generateNewBoard = GenerateNewBoard.builder()
                 .addConnection(conn)
@@ -86,14 +86,10 @@ const CreateGrid = () => {
                 .build()
 
             generateNewBoard.execute(rows, cols, solution)
-
-            setTimeout(() => {
-                console.log("Stopping the listener")
-            }, 3000)
         }
     }
 
-    const generateGrid = () => {
+    const generateGrid = useMemo(() => {
         const grid: string[][] = []
 
         for (let row = 0; row < gridSize.rows; row++) {
@@ -105,7 +101,7 @@ const CreateGrid = () => {
         }
 
         return grid
-    }
+    }, [gridSize.rows, gridSize.cols])
 
     return (
         <>
@@ -118,6 +114,7 @@ const CreateGrid = () => {
                     <div className={'relative flex flex-col text-stone-600 items-center gap-4'}>
                         <div
                             className={'flex flex-row justify-center items-center gap-2 border-sky-300 border-2 py-1 px-2 rounded'}>
+                            {/*<MoveGrid grid={generateGrid} />*/}
                             <p className={'select-all text-sm '}>cruciwordo.com/play/{newBoard?.id}</p>
                             <div className={''}>
                                 <IoCopy onClick={() => {
@@ -220,7 +217,7 @@ const CreateGrid = () => {
                     </center>
                     <center className={`flex flex-col gap-2 ${tabName === 'PREVIEW' ? 'flex' : 'hidden'}`}>
                         <section className={'flex flex-col justify-center p-2 border-2 border-dotted rounded-xl'}>
-                            <MoveGrid grid={generateGrid()}/>
+                            <MoveGrid grid={generateGrid}/>
                             <p className={'text-md text-center p-4 text-sky-500'}>
                                 This is just a preview click generate to create a similar puzzle!
                             </p>
