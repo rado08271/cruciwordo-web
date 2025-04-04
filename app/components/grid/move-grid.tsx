@@ -1,55 +1,26 @@
 "use client"
-import React, {useMemo, useState} from 'react';
-import {animated} from '@react-spring/web'
-import {abs} from "stylis";
+import React, {useMemo, useOptimistic, useState} from 'react';
+import type Cell from "~/types/cell";
 
 type Props = {
-    grid: SelectionCellType[][],
-    onSequenceSelect?: (sequence: SelectionCellType[]) => boolean
-}
-
-export type SelectionCellType = {
-    rowId: number,
-    colId: number
-    cell: string
-    wordId?: string,
-    found?: boolean,
+    grid: Cell[][],
+    onSequenceSelect?: (sequence: Cell[]) => boolean
 }
 
 // type SelectionPoint = { rowId: number, colId: number }
 
 const MoveGrid = ({grid, onSequenceSelect}: Props) => {
-    const [startPosition, setStartPosition] = useState<SelectionCellType | null>(null)
-    const [endPosition, setEndPosition] = useState<SelectionCellType | null>(null)
-    const [selectedCells, setSelectedCells] = useState<SelectionCellType[]>([])
-    const [isValidSequence, setIsValidSequence] = useState(false)
-    // const colors: {[key: string]: string } = {
-    //     "ORANGE": "bg-blue-400",
-    //     "ZONE": "bg-red-100",
-    //     "ANGER": "bg-indigo-400"
-    // }
-    // const colors = useMemo(() => {
-    //     const colorValues: {[key: string]: string} = {}
-    //
-    //     for (const row of grid) {
-    //         for (const cell of row) {
-    //             if (cell.wordId && !colorValues[cell.wordId]) {
-    //                 colorValues[cell.wordId] = getRandomTailwindColor()
-    //                 console.log(cell.wordId , colorValues[cell.wordId], colorValues)
-    //             }
-    //         }
-    //     }
-    //
-    //     return colorValues
-    // }, [grid])
+    const [startPosition, setStartPosition] = useState<Cell | null>(null)
+    const [endPosition, setEndPosition] = useState<Cell | null>(null)
+    const [selectedCells, setSelectedCells] = useState<Cell[]>([])
 
-    const handleCellMouseDown = (cell: SelectionCellType) => {
+    const handleCellMouseDown = (cell: Cell) => {
         setStartPosition(cell)
         setEndPosition(null)
         setSelectedCells([cell])
     }
 
-    const handleCellMouseOver = (cell: SelectionCellType) => {
+    const handleCellMouseOver = (cell: Cell) => {
         if (startPosition) {
             setEndPosition(cell)
 
@@ -61,12 +32,10 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
     const handleCellMouseUp = () => {
         if (startPosition && endPosition && onSequenceSelect) {
             const sequence = selectedCells.map(sequenceCells =>
-                grid[sequenceCells.rowId][sequenceCells.colId]
+                grid[sequenceCells.row][sequenceCells.col]
             )
 
-            setIsValidSequence(
-                onSequenceSelect(sequence)
-            )
+            onSequenceSelect(sequence)
         }
 
         setSelectedCells([])
@@ -74,37 +43,37 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
         setEndPosition(null)
     }
 
-    const getCellSequence = (start: SelectionCellType, end: SelectionCellType): SelectionCellType[] => {
-        const cells: SelectionCellType[] = []
+    const getCellSequence = (start: Cell, end: Cell): Cell[] => {
+        const cells: Cell[] = []
 
-        const rowDiff = end.rowId - start.rowId
-        const colDiff = end.colId - start.colId
+        const rowDiff = end.row - start.row
+        const colDiff = end.col - start.col
 
         // horizontal
         if (rowDiff === 0) {
             const step = colDiff > 0 ? 1 : -1
-            for (let col = start.colId; col !== end.colId + step; col += step) {
-                cells.push(grid[start.rowId][col])
+            for (let col = start.col; col !== end.col + step; col += step) {
+                cells.push(grid[start.row][col])
             }
         }
 
         // vertical
         else if (colDiff === 0) {
             const step = rowDiff > 0 ? 1 : -1
-            for (let row = start.rowId; row !== end.rowId + step; row += step) {
-                cells.push(grid[row][start.colId])
+            for (let row = start.row; row !== end.row + step; row += step) {
+                cells.push(grid[row][start.col])
             }
 
         }
 
         // diagonal
-        else if (abs(rowDiff) === abs(colDiff)) {
+        else if (Math.abs(rowDiff) === Math.abs(colDiff)) {
             const rowStep = rowDiff > 0 ? 1 : -1
             const colStep = colDiff > 0 ? 1 : -1
-            let row = start.rowId
-            let col = start.colId
+            let row = start.row
+            let col = start.col
 
-            while (row !== end.rowId + rowStep || col !== end.colId + colStep) {
+            while (row !== end.row + rowStep || col !== end.col + colStep) {
                 cells.push(grid[row][col])
                 row += rowStep
                 col += colStep
@@ -119,9 +88,10 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
         return cells
     }
 
-    const isCellHovered = (rowId: number, colId: number): boolean => {
-        return selectedCells.find(cell => cell.rowId === rowId && cell.colId === colId) !== undefined
+    const isCellHovered = (searchedCell: Cell): boolean => {
+        return selectedCells.find(cell => cell === searchedCell) !== undefined
     }
+
 
     return (
         <div className={'relative flex justify-center'}>
@@ -131,23 +101,43 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
                 className={`grid p-4 overflow-hidden rounded-xl select-none bg-sky-50`}>
                 {
                     grid.map((row, rowId) => row.map((cell, colId) => {
-                        return <article
-                            key={`${cell.cell}-${cell.rowId}-${cell.colId}`}
-                            onMouseUp={handleCellMouseUp}
-                            onMouseOver={() => handleCellMouseOver(cell)}
-                            onMouseDown={() => handleCellMouseDown(cell)}
-                            className={`col-span-1 rounded-sm border-2 border-sky-200 aspect-square w-7 h-7 cursor-pointer transition-colors delay-100 duration-300 ease-in-out ${isCellHovered(rowId, colId) ? 'bg-sky-500' : `${cell.found ? "bg-green-400" : "bg-white"} hover:bg-sky-100`}`}>
-                            <div
-                                className={'flex w-full h-full justify-center text-lg font-mono text-center text-sky-600'}>
-                                {cell.cell}
-                            </div>
-                        </article>
+                        return <React.Fragment key={`${cell.value}-${cell.row}-${cell.col}`}>
+                            <CellItem handleCellMouseUp={handleCellMouseUp} handleCellMouseDown={handleCellMouseDown} handleCellMouseOver={handleCellMouseOver} cell={cell} hovered={isCellHovered(cell)}/>
+                        </React.Fragment>
                     }))
                 }
             </section>
         </div>
     )
 };
+
+type CellProps = {
+    handleCellMouseUp: () => void
+    handleCellMouseDown: (cell: Cell) => void
+    handleCellMouseOver: (cell: Cell) => void
+    cell: Cell
+    hovered: boolean
+    selected?: boolean
+    found?: boolean
+}
+
+const CellItem = React.memo((
+    {handleCellMouseDown, handleCellMouseOver, cell, handleCellMouseUp, hovered}: CellProps
+) => (
+    <div
+
+        onMouseUp={handleCellMouseUp}
+        onMouseOver={() => handleCellMouseOver(cell)}
+        onMouseDown={() => handleCellMouseDown(cell)}
+        style={{backgroundColor: cell.foundBy.length > 0 ? `#${cell.foundBy.at(0).ident3hex}` : ''}}
+        className={`col-span-1 rounded-sm border-2 border-sky-200 aspect-square w-7 h-7 cursor-pointer transition-colors delay-100 duration-300 ease-in-out ${hovered ? 'bg-sky-500' : `bg-white hover:bg-sky-100`}`}>
+        <div
+            className={'flex w-full h-full justify-center text-lg font-mono text-center text-sky-600'}>
+            {cell.value}
+        </div>
+    </div>
+))
+
 
 export default MoveGrid;
 

@@ -14,14 +14,13 @@ export class Connection  {
     private onErrorListener?: ConnectionErrorListener
     private onStateChangeListener?: ConnectionStateChangeListener
 
-    private constructor() {
+    constructor(ssr?: boolean) {
         this.dbConnectionBuilder = DbConnection.builder()
-            .withUri('ws://localhost:3000')
-            .withModuleName('cruciwordo')
-            .withToken(localStorage.getItem('token') || '')
             .onConnect((connection: DbConnection, identity: Identity, token: string) => {
-                localStorage.setItem('token', token)
-                sessionStorage.setItem('identity', identity.toHexString())
+                if (!ssr) {
+                    localStorage.setItem('token', token)
+                    sessionStorage.setItem('identity', identity.toHexString())
+                }
 
                 if (connection.isActive) {
                     this.dbConnection = connection
@@ -49,6 +48,14 @@ export class Connection  {
                 if (error && this.onErrorListener)
                     this.onErrorListener(error)
             })
+
+        this.dbConnectionBuilder.withUri(import.meta.env.VITE_SPACETIME_URL)
+        this.dbConnectionBuilder.withModuleName(import.meta.env.VITE_SPACETIME_MODULE)
+
+        // to ensure we only access local storage when client is available
+        if (!ssr) {
+            this.dbConnectionBuilder.withToken(localStorage.getItem('token') || '')
+        }
     }
 
     public addOnConnect = (onConnectedListener: ConnectionConnectedListener): Connection => {

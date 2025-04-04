@@ -1,33 +1,23 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import MoveGrid, {type SelectionCellType} from "~/components/grid/move-grid";
-import type {BoardDatabaseModel, GameSessionDatabaseModel, WordPlacementsDatabaseModel} from "@spacetime";
+import React, {useCallback, useEffect, useState} from 'react';
 import {JoinGame, WordIsFound} from "~/api/reducers";
 import useConnection from "~/hooks/use-connection";
 import Loading from "~/components/common/loading/loading";
+import {SubscribeToGamePlayers} from "~/api/subscribers/subscribe-to-game-players";
+import {SubscribeToBoardWords} from "~/api/subscribers/subscribe-to-board-words";
+import type Cell from "~/types/cell";
+import type Board from "~/types/board";
+
+import Player from "~/types/player";
+import Word from "~/types/word";
+import PlayersList from "~/components/lists/players-list";
 import {SubscribeToGameSession} from "~/api/subscribers/subscribe-to-game-session";
 import {Identity} from "@clockworklabs/spacetimedb-sdk";
-import {SubscribeToGamePlayers} from "~/api/subscribers/subscribe-to-game-players";
-import {SubscribeToGameJoins} from "~/api/subscribers/subscribe-to-game-joins";
-import PlayersList from "~/components/cards/players-list";
-import WordsList from "~/components/cards/words-list";
-import {SubscribeToBoardWords} from "~/api/subscribers/subscribe-to-board-words";
+import WordsList from "~/components/lists/words-list";
+import MoveGrid from "~/components/grid/move-grid";
+import {getDirectionVector} from "~/types/direction";
 
 type Props = {
-    board: BoardDatabaseModel
-}
-
-const getDirection = (dir: string): [number, number] => {
-    switch (dir) {
-        case "NW":  return [-1, -1];
-        case "N":   return [ 0, -1];
-        case "NE":  return [ 1, -1];
-        case "W":   return [-1,  0];
-        case "E":   return [ 1,  0];
-        case "SW":  return [-1, 1];
-        case "S":   return [ 0, 1];
-        case "SE":  return [ 1, 1];
-        default:    return [ 0, 0];
-    }
+    board: Board
 }
 
 const PlayableGrid = ({board}: Props) => {
@@ -35,84 +25,41 @@ const PlayableGrid = ({board}: Props) => {
     const [conn, connState] = useConnection()
     const [isLoading, setIsLoading] = useState(true)
 
-    const [userSession, setUserSession] = useState<GameSessionDatabaseModel | null>(null)
-    const [players, setPlayers] = useState<GameSessionDatabaseModel[]>([])
-    const [words, setWords] = useState<WordPlacementsDatabaseModel[] | null>(null)
+    // current player instance to track
+    const [player, setPlayerSession] = useState<Player | null>(null)
 
-    const generatedBoard = useMemo((): SelectionCellType[][] => {
-        if (!words) return []
-        // const tiles: string[][] = new Array(board.rows).fill("A")
-        const tiles: SelectionCellType[][] = []
-        for (let ridx = 0; ridx < board.rows; ridx++) {
-            const row: SelectionCellType[] = new Array(board.cols).fill(undefined).map((value, cidx) => ({
-                colId: cidx,
-                rowId: ridx,
-                cell: "?",
-                found: false
-            }))
-            tiles.push(row)
-        }
+    // changing players state happens every time there is a new changed record in database
+    const [players, setPlayers] = useState<Player[]>([])
 
-        // Propagate words
-        for (const {startRow, startCol, direction, word}: WordPlacementsDatabaseModel of words) {
-            const wordIsFoundBy = players.filter(value => value.foundWords.split("|").find(foundWord => foundWord === word))
-            const [dirCol, dirRow] = getDirection(direction)
-            let endRow = (startRow + (dirRow * (word.length )))
-            let endCol = (startCol + (dirCol * (word.length )))
-
-            let currentRow = startRow
-            let currentCol = startCol
-            let step = 0;
-
-            console.log(`Word ${word} found by`, wordIsFoundBy)
-            while (currentRow !== endRow || currentCol !== endCol) {
-                tiles[currentRow][currentCol].cell = word.at(step)
-                tiles[currentRow][currentCol].wordId = word
-                tiles[currentRow][currentCol].found = wordIsFoundBy.length > 0
-
-                currentRow += dirRow
-                currentCol += dirCol
-                step += 1;
-            }
-        }
-
-        let solutionIndex = 0
-        // Propagate solution
-        for (const row of tiles) {
-            for (const cell of row) {
-                if (cell.cell === "?") {
-                    cell.cell = board.solution.at(solutionIndex)
-                    solutionIndex += 1
-                    if (solutionIndex === board.solution.length) break;
-                }
-            }
-        }
-
-        return tiles
-    }, [board.rows, words, board.cols, board.solution, players])
+    // loading words will happen only once when board is loaded
+    const [words, setWords] = useState<Word[] | null>(null)
 
     useEffect(() => {
-        if (conn && connState === "CONNECTED") {
+        if (conn && connState === "CONNECTED" && words !== null) {
             const gamePlayersSub = SubscribeToGamePlayers(conn, board.id, games => {
-                console.log("players", games)
-                setPlayers(games)
+                const processedPlayers = games.map(session => new Player(session))
+                processedPlayers.forEach(player => player.assignFoundWords(words))
+
+                setPlayers(processedPlayers)
             })
 
             return () => {
-                gamePlayersSub.unsubscribe()
+                // gamePlayersSub.unsubscribe()
             }
         }
-    }, [conn, connState])
+    }, [conn, connState, words])
 
     useEffect(() => {
         if (conn && connState === "CONNECTED") {
             const boardWordsSub = SubscribeToBoardWords(conn, board.id, wordsPlace => {
-                setWords(wordsPlace)
+                const processedWords = wordsPlace.map((word) => new Word(word))
+                board.propagateBoardWords(processedWords)
 
+                setWords(processedWords)
             })
 
             return () => {
-                boardWordsSub.unsubscribe()
+                // boardWordsSub.unsubscribe()
             }
         }
     }, [conn, connState])
@@ -122,25 +69,91 @@ const PlayableGrid = ({board}: Props) => {
             setIsLoading(true)
             const joinGameReducer = JoinGame.builder()
                 .addConnection(conn)
-                .addOnError(error => {
-                    console.error("Join game error", error)
+                .addOnSuccess(() => {
+                    const gameSessionSub = SubscribeToGameSession(conn, board.id, Identity.fromString(sessionStorage.getItem('identity')), game => {
+                        setPlayerSession(new Player(game))
+                        setIsLoading(false)
+                    })
+
+                    joinGameReducer.stop()
                 })
                 .build()
-
-            const gameSessionSub = SubscribeToGameSession(conn, board.id, Identity.fromString(sessionStorage.getItem('identity')), game => {
-                setUserSession(game)
-                console.log("Game session activated", game)
-                setIsLoading(false)
-            })
 
             joinGameReducer.execute(board.id)
 
             return () => {
-                gameSessionSub.unsubscribe()
-                joinGameReducer.stop()
+                // gameSessionSub.unsubscribe()
+                // joinGameReducer.stop()
             }
         }
     }, [conn, connState]);
+
+    const processSelectedSequence = useCallback((sequence: Cell[]): boolean => {
+        console.table(sequence)
+
+        const normalSequence = sequence.map(cell => cell.value).join('')
+        const reversedSequence = sequence.map(cell => cell.value).reverse().join('')
+
+        if (words) {
+            const reversedWord = words.find(value => value.word === reversedSequence)
+            // in case reversed word is available we can assume there is a palindrome if normalWord && reversedWord are avilable so we will just
+            let normalWord = reversedWord ? reversedWord : words.find(value => value.word === normalSequence)
+
+            if (reversedWord) {
+                sequence.reverse()
+            }
+
+            if (normalWord) {
+                const sequenceStartCol = sequence.at(0)?.col
+                const sequenceStartRow = sequence.at(0)?.row
+                const sequenceEndCol = sequence.at(sequence.length - 1)?.col
+                const sequenceEndRow = sequence.at(sequence.length - 1)?.row
+
+                const [dirCol, dirRow] = getDirectionVector(normalWord.direction)
+                const wordStartCol = normalWord.startCol
+                const wordStartRow = normalWord.startRow
+                const wordEndCol = (normalWord.startCol + (dirCol * (normalWord.depth -1)))
+                const wordEndRow = (normalWord.startRow + (dirRow * (normalWord.depth -1)))
+
+                console.group()
+                    console.info("Sequence", sequence)
+                    console.group()
+                        console.info("SSC", sequenceStartCol)
+                        console.info("SSR", sequenceStartRow)
+                        console.info("SEC", sequenceEndCol)
+                        console.info("SER", sequenceEndRow)
+                    console.groupEnd()
+
+                    console.info("Word", normalWord)
+                    console.group()
+                        console.info("WSC", wordStartCol)
+                        console.info("WSR", wordStartRow)
+                        console.info("WEC", wordEndCol)
+                        console.info("WER", wordEndRow)
+                    console.groupEnd()
+                console.groupEnd()
+
+                if (
+                    sequenceStartCol === wordStartCol && sequenceStartRow === wordStartRow &&
+                    sequenceEndCol === wordEndCol && sequenceEndRow === wordEndRow
+                ) {
+                    console.log("Proceeding to update database on normal word!")
+
+                    // we need to make sure in this step it starts in the same cell and ends in the same cell as word
+                    const wordIsFoundReducer = WordIsFound.builder()
+                        .addConnection(conn!)
+                        .build()
+
+                    wordIsFoundReducer.execute(board.id, normalWord.word)
+
+                    return true
+                }
+            }
+        }
+
+
+        return false
+    }, [words, conn, board.id])
 
     return (
         <>
@@ -155,37 +168,12 @@ const PlayableGrid = ({board}: Props) => {
 
             <div className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center p-24 z-0'}>
                 <div
-                    className={`relative text-stone-600 max-w-full bg-white rounded-xl p-8 grid grid-rows-2 grid-cols-6`}>
+                    className={`relative text-stone-600 max-w-full lg:w-1/2 w-full bg-white rounded-xl p-8 grid grid-rows-2 grid-cols-6`}>
                     <div className={'row-start-2 col-start-6 col-span-1 self-end'}>
                         <PlayersList boardId={board.id} players={players}/>
                     </div>
                     <div className={'row-start-1 col-start-1 col-span-4 row-span-2 self-center w-full'}>
-                        <MoveGrid grid={generatedBoard} onSequenceSelect={sequence => {
-                            const word = sequence.map(value => value.cell).join('')
-                            console.table(sequence)
-
-                            if (words) {
-                                console.log(words.find(value => value.word === word))
-                            }
-
-                            if (words && words.find(value => value.word === word)) {
-                                console.log("Wrod found processing", word)
-                                const wordIsFoundReducer = WordIsFound.builder()
-                                    .addConnection(conn!)
-                                    .addOnError(error => {
-                                        console.error("Join game error", error)
-                                    })
-                                    .addOnSuccess(() => {
-                                        console.log("Successfully word process")
-                                    })
-                                    .build()
-
-                                wordIsFoundReducer.execute(board.id, word)
-                                // wordIsFoundReducer.stop()
-                            }
-
-                            return true
-                        }}/>
+                        <MoveGrid grid={board.grid} onSequenceSelect={processSelectedSequence}/>
                     </div>
                     <div className={'row-start-1 row-span-full col-start-5 col-span-2 self-start'}>
                         <WordsList boardId={board.id} words={words ?? []}/>

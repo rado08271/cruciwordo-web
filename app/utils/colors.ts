@@ -17,7 +17,6 @@ export const getRandomTailwindColor = () => {
     // Get random shade
     const randomShade = shades[Math.floor(Math.random() * shades.length)];
 
-    console.log(`bg-${randomColor}-${randomShade}`)
     return `bg-${randomColor}-${randomShade}`;
 }
 

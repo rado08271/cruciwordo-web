@@ -13,8 +13,6 @@ export const SubscribeToGameJoins = (conn: DbConnection, boardId: string, callba
 
     const time = new Date().getTime()
     const onInsert = (ctx: EventContext, row: GameSessionDatabaseModel) => {
-        console.log("Inserted", ctx.db.gameSession.count())
-
         // if (ctx.event.tag === "Reducer" && ctx.event.value.reducer.name === "join_game") {
         if (ctx.event.tag === "Reducer" && ctx.event.value.reducer.name === "join_game") {
             callback(row)
@@ -22,17 +20,11 @@ export const SubscribeToGameJoins = (conn: DbConnection, boardId: string, callba
     }
 
     const onUpdate = (ctx: EventContext, row: GameSessionDatabaseModel, newRow: GameSessionDatabaseModel) => {
-        console.log("Updated", ctx.db.gameSession.count())
-
         if (newRow.isOnline) {
             callback(newRow)
         }
 
     }
-
-    conn.reducers.onCloseSession(() => {
-        console.log("someone closed the session")
-    })
 
     const subscription = conn.subscriptionBuilder()
         .onApplied(ctx => {

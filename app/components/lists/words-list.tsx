@@ -1,19 +1,11 @@
-import React, {memo, useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import useConnection from "~/hooks/use-connection";
-import {SubscribeToBoardWords} from "~/api/subscribers/subscribe-to-board-words";
-import type {WordPlacementsDatabaseModel} from "@spacetime";
 import Loading from "~/components/common/loading/loading";
-import word from "~/components/items/word";
+import type Word from "~/types/word";
 
 type Props = {
     boardId: string,
-    words: WordPlacementsDatabaseModel[]
-}
-
-type WordGuess = {
-    guessedBy: string[],
-    word: string,
-    // cells:
+    words: Word[]
 }
 
 const WordsList = ({boardId, words}: Props) => {
@@ -30,8 +22,11 @@ const WordsList = ({boardId, words}: Props) => {
             {isLoading && <Loading/>}
             <ul className={'grid grid-cols-2 gap-2'}>
                 {words.map(word => {
-                    return <li key={word.id} className={'relative w-8 aspect-square h-8'}>
-                        {word.word}
+                    return <li key={word.id} className={`relative w-8 aspect-square h-8`}>
+                        {(word.foundBy.length > 0)
+                            ? <strike>{word.word}</strike>
+                            : <>{word.word}</>
+                        }
                     </li>
                 })}
             </ul>

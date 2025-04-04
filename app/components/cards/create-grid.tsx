@@ -1,13 +1,13 @@
-import React, {Reducer, useCallback, useEffect, useMemo, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import useConnection from "~/hooks/use-connection";
 import {
+    IoArrowForward,
     IoCogSharp,
+    IoCopy,
     IoGridSharp,
     IoKeySharp,
     IoLanguageSharp,
-    IoShareSharp,
-    IoArrowForwardSharp,
-    IoShare, IoShareSocialSharp, IoCopySharp, IoCopy, IoArrowForwardCircle, IoArrowForward, IoShareSocial
+    IoShareSocial
 } from "react-icons/io5";
 import MoveGrid from "~/components/grid/move-grid";
 import Loading from "~/components/common/loading/loading";
@@ -15,7 +15,7 @@ import {useNavigate} from "react-router";
 import {GenerateNewBoard} from '~/api/reducers'
 import {SubscribeToBoardNew} from "~/api/subscribers/subscribe-to-board-new";
 import {Identity} from "@clockworklabs/spacetimedb-sdk";
-import type {BoardDatabaseModel, DbConnection} from "@spacetime";
+import type {BoardDatabaseModel} from "@spacetime";
 
 type SupportedLangType = { language: string, i18n: string, id: string }
 type SupportedGridSize = {
@@ -61,7 +61,6 @@ const CreateGrid = () => {
     useEffect(() => {
         if (connectionState === "CONNECTED" && conn) {
             const sub = SubscribeToBoardNew(conn, Identity.fromString(localStorage.getItem('identity')), board => {
-                console.log('board', board)
                 setNewBoard(board)
 
                 // no reason to stay subscribed
@@ -76,12 +75,10 @@ const CreateGrid = () => {
             const generateNewBoard = GenerateNewBoard.builder()
                 .addConnection(conn)
                 .addOnSuccess(() => {
-                    console.log("board was created")
                     setIsLoading(false);
                 })
                 .addOnError((generateError) => {
                     setError(generateError.message);
-                    console.error("board error", generateError)
                 })
                 .build()
 

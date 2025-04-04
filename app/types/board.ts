@@ -1,81 +1,108 @@
-import type {HistoryModel} from "~/types/history";
-import {stringToHistoryModel} from "~/types/history";
-import type {CellModel} from "~/types/cell";
+import type {BoardDatabaseModel} from "@spacetime";
+import {Identity, Timestamp} from "@clockworklabs/spacetimedb-sdk";
+import {getDirectionVector} from "~/types/direction";
+import type Player from "~/types/player";
+import type Word from "~/types/word";
+import type Cell from "~/types/cell";
 
-export type BoardModel = {
-    id: string
-    createdDate: Date
-    rows: number
-    cols: number
-    originalMessage: string
-    solution: string
-    grid: CellModel[][]
-    history: HistoryModel[]
-}
+type IBoard = {
+    id: string,
+    createdDate: Timestamp,
+    createdBy: Player,
+    rows: number,
+    cols: number,
+    message: string,
+    solution: string,
+    grid: Cell[][],
+};
 
-export type BoardDTO = {
-    id: string
-    created_date: string
-    rows: number
-    cols: number
-    original_message: string
-    solution: string
-    grid: string
-    history: string[]
-}
+class Board implements IBoard {
+    private boardDatabaseModel: BoardDatabaseModel
+    public cols: number;
+    public rows: number;
+    public createdBy: Player;
+    public createdDate: Timestamp;
+    public grid: Cell[][];
+    public id: string;
+    public message: string;
+    public solution: string;
 
-export const boardDTOToModel = ( dto: BoardDTO) : BoardModel => {
-    const arrayGrid: CellModel[][] = [];
-    let arrayRow: CellModel[] = [];
-    let cols = 0;
-    let rows = 0;
-    let solIdx = 0;
+    public constructor(boardDatabaseModel: BoardDatabaseModel) {
+        this.boardDatabaseModel = boardDatabaseModel
 
-    for (let cell of dto.grid) {
-        let value: string = cell
-        if (cell === '?') {
-            value = dto.solution.at(solIdx) ?? cell
-            solIdx += 1
+        this.cols = boardDatabaseModel.cols
+        this.rows = boardDatabaseModel.rows
+        this.id = boardDatabaseModel.id
+        this.solution = boardDatabaseModel.solution
+        this.createdDate = boardDatabaseModel.createdDate
+        this.message = boardDatabaseModel.message
+
+        // create grid
+        this.grid = this.createEmptyGrid()
+
+    }
+
+    private createEmptyGrid = (): Cell[][] => {
+        const tiles: Cell[][] = []
+        // init the tiles first
+        for (let ridx = 0; ridx < this.rows; ridx++) {
+            const row: Cell[] = new Array(this.cols).fill(undefined).map((_, cidx) => ({
+                row: ridx,
+                col: cidx,
+                value: "?",
+                foundBy: [],
+                word: []
+            }))
+
+            tiles.push(row)
         }
 
-        arrayRow.push({
-            row: rows,
-            col: cols,
-            solution: cell === '?',
-            value
-        })
-        cols += 1
+        return tiles
+    }
 
-        if (cols === dto.cols) {
-            arrayGrid.push(arrayRow)
-            arrayRow = []
-            rows += 1
-            cols = 0
+    public propagateBoardWords = (words: Word[]) => {
+        if (!words) return []
+
+        // Propagate words
+        for (const sequence of words) {
+            const [dirCol, dirRow] = getDirectionVector(sequence.direction)
+            let endRow = (sequence.startRow + (dirRow * (sequence.depth )))
+            let endCol = (sequence.startCol + (dirCol * (sequence.depth )))
+
+            let currentRow = sequence.startRow
+            let currentCol = sequence.startCol
+            let step = 0;
+
+            while (currentRow !== endRow || currentCol !== endCol) {
+                this.grid[currentRow][currentCol].value = sequence.word.at(step)
+                this.grid[currentRow][currentCol].foundBy = sequence.foundBy
+
+                if (!this.grid[currentRow][currentCol].word.find(word => word === sequence))
+                    this.grid[currentRow][currentCol].word.push(sequence)
+
+                currentRow += dirRow
+                currentCol += dirCol
+                step += 1;
+            }
         }
+
+        // Propagate solution
+        let solutionIndex = 0
+        for (const row of this.grid) {
+            for (const cell of row) {
+                if (cell.value === "?") {
+                    cell.value = this.solution.at(solutionIndex)
+                    solutionIndex += 1
+                    if (solutionIndex === this.solution.length) break;
+                }
+            }
+        }
+
     }
 
-    return {
-        createdDate: new Date(Date.parse(dto.created_date)),
-        originalMessage: dto.original_message,
-        cols: dto.cols,
-        rows: dto.rows,
-        solution: dto.solution,
-        id: dto.id,
-        grid: arrayGrid,
-        history: dto.history.map(value => stringToHistoryModel(value))
-    }
-}
-
-export const boardModelToDTO  = ( model: BoardModel) : BoardDTO => {
-    return {
-        id: model.id,
-        cols: model.cols,
-        rows: model.rows,
-        solution: model.solution,
-        original_message: model.originalMessage,
-        created_date: model.createdDate.toISOString(),
-        grid: "",
-        history: ["", "", ""]
+    public assignCreatorAccount = (creator: Player) => {
+        this.createdBy = creator
     }
 }
 
+export default Board
