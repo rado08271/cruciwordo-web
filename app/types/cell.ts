@@ -5,7 +5,6 @@ type Cell = {
     row: number,
     col: number
     value: string
-    foundBy: Player[],
     word: Word[],
 }
 

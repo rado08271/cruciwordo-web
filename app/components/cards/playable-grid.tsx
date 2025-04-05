@@ -33,7 +33,7 @@ const PlayableGrid = ({board, words}: Props) => {
     const [players, setPlayers] = useState<Player[]>([])
 
     useEffect(() => {
-        if (conn && connState === "CONNECTED" && words !== null) {
+        if (conn && connState === "CONNECTED" && words.length > 0) {
             const gamePlayersSub = SubscribeToGamePlayers(conn, board.id, games => {
                 const processedPlayers = games.map(session => new Player(session))
                 processedPlayers.forEach(player => player.assignFoundWords(words))
@@ -56,6 +56,11 @@ const PlayableGrid = ({board, words}: Props) => {
                     const gameSessionSub = SubscribeToGameSession(conn, board.id, Identity.fromString(sessionStorage.getItem('identity')), game => {
                         setPlayerSession(new Player(game))
                         setIsLoading(false)
+
+                        // To make sure it focuses on board grid
+                        // document.getElementById('board_grid').scrollIntoView({
+                        //     behavior: "smooth"
+                        // })
                     })
 
                     joinGameReducer.stop()
@@ -77,6 +82,7 @@ const PlayableGrid = ({board, words}: Props) => {
         const normalSequence = sequence.map(cell => cell.value).join('')
         const reversedSequence = sequence.map(cell => cell.value).reverse().join('')
 
+        // we need to make sure in this step it starts in the same cell and ends in the same cell as word
         if (words) {
             const reversedWord = words.find(value => value.word === reversedSequence)
             // in case reversed word is available we can assume there is a palindrome if normalWord && reversedWord are avilable so we will just
@@ -98,31 +104,10 @@ const PlayableGrid = ({board, words}: Props) => {
                 const wordEndCol = (normalWord.startCol + (dirCol * (normalWord.depth -1)))
                 const wordEndRow = (normalWord.startRow + (dirRow * (normalWord.depth -1)))
 
-                console.group()
-                    console.info("Sequence", sequence)
-                    console.group()
-                        console.info("SSC", sequenceStartCol)
-                        console.info("SSR", sequenceStartRow)
-                        console.info("SEC", sequenceEndCol)
-                        console.info("SER", sequenceEndRow)
-                    console.groupEnd()
-
-                    console.info("Word", normalWord)
-                    console.group()
-                        console.info("WSC", wordStartCol)
-                        console.info("WSR", wordStartRow)
-                        console.info("WEC", wordEndCol)
-                        console.info("WER", wordEndRow)
-                    console.groupEnd()
-                console.groupEnd()
-
                 if (
                     sequenceStartCol === wordStartCol && sequenceStartRow === wordStartRow &&
                     sequenceEndCol === wordEndCol && sequenceEndRow === wordEndRow
                 ) {
-                    console.log("Proceeding to update database on normal word!")
-
-                    // we need to make sure in this step it starts in the same cell and ends in the same cell as word
                     const wordIsFoundReducer = WordIsFound.builder()
                         .addConnection(conn!)
                         .build()
@@ -133,7 +118,6 @@ const PlayableGrid = ({board, words}: Props) => {
                 }
             }
         }
-
 
         return false
     }, [words, conn, board.id])
@@ -149,18 +133,18 @@ const PlayableGrid = ({board, words}: Props) => {
             }
 
 
-            <div className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center p-24 z-0'}>
-                <div className="relative text-stone-600 max-w-full w-full bg-white rounded-xl p-8 flex flex-col">
+            <div className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center md:p-24 z-0'}>
+                <div className="relative text-stone-600 max-w-full w-full bg-white rounded-xl p-2 md:p-8 flex flex-col gap-4">
 
-                    <div className="bg-blue-500">
+                    <div className="flex justify-end">
                         <PlayersList boardId={board.id} players={players}/>
                     </div>
 
-                    <div className={'flex flex-row items-center'}>
-                        <div id={'board_grid'} className="bg-red-500 flex-1 gap-4">
+                    <div className={'flex flex-col xl:flex-row items-center gap-4'}>
+                        <div id={'board_grid'} className="flex-1" >
                             <MoveGrid grid={board.grid} onSequenceSelect={processSelectedSequence}/>
                         </div>
-                        <div className="bg-green-400">
+                        <div className="">
                             <WordsList boardId={board.id} words={words ?? []}/>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 "use client"
 import React, {useMemo, useOptimistic, useState} from 'react';
 import type Cell from "~/types/cell";
+import useSound from "~/hooks/use-sound";
 
 type Props = {
     grid: Cell[][],
@@ -13,6 +14,8 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
     const [startPosition, setStartPosition] = useState<Cell | null>(null)
     const [endPosition, setEndPosition] = useState<Cell | null>(null)
     const [selectedCells, setSelectedCells] = useState<Cell[]>([])
+    const playClick = useSound("click")
+    const playFound = useSound("success")
 
     const handleCellMouseDown = (cell: Cell) => {
         setStartPosition(cell)
@@ -26,6 +29,7 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
 
             const cells = getCellSequence(startPosition, cell)
             setSelectedCells(cells)
+            playClick()
         }
     }
 
@@ -35,7 +39,11 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
                 grid[sequenceCells.row][sequenceCells.col]
             )
 
-            onSequenceSelect(sequence)
+            const foundWord = onSequenceSelect(sequence)
+
+            if (foundWord) {
+                playFound()
+            }
         }
 
         setSelectedCells([])
@@ -98,7 +106,7 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
             <section
                 onMouseLeave={handleCellMouseUp}
                 style={{gridTemplateColumns: `repeat(${grid.length}, minmax(0, 1fr))`}}
-                className={`grid p-4 overflow-hidden rounded-xl select-none bg-sky-50`}>
+                className={`grid p-1 md:p-4 overflow-hidden rounded-xl select-none bg-sky-50`}>
                 {
                     grid.map((row, rowId) => row.map((cell, colId) => {
                         return <React.Fragment key={`${cell.value}-${cell.row}-${cell.col}`}>
@@ -124,19 +132,37 @@ type CellProps = {
 const CellItem = React.memo((
     {handleCellMouseDown, handleCellMouseOver, cell, handleCellMouseUp, hovered}: CellProps
 ) => (
-    <div
-
-        onMouseUp={handleCellMouseUp}
-        onMouseOver={() => handleCellMouseOver(cell)}
-        onMouseDown={() => handleCellMouseDown(cell)}
-        style={{backgroundColor: cell.foundBy.length > 0 ? `#${cell.foundBy.at(0).ident3hex}` : ''}}
-        className={`col-span-1 rounded-sm border-2 border-sky-200 aspect-square min-w-7 min-h-7 w-7 h-7 cursor-pointer transition-colors delay-100 duration-300 ease-in-out ${hovered ? 'bg-sky-500' : `bg-white hover:bg-sky-100`}`}>
         <div
-            className={'flex w-full h-full justify-center text-lg font-mono text-center text-sky-600'}>
-            {cell.value}
+            onMouseUp={handleCellMouseUp}
+            onMouseOver={() => handleCellMouseOver(cell)}
+            onMouseDown={() => handleCellMouseDown(cell)}
+            className={`relative col-span-1 rounded-sm border-2 border-sky-200 aspect-square text-xs md:text-lg w-5 h-5 md:w-7 md:h-7 cursor-pointer transition-colors delay-100 duration-300 ease-in-out ${hovered ? 'bg-sky-500' : `bg-white hover:bg-sky-100`}`}>
+            <div className={'flex w-full h-full justify-center items-center  font-mono text-center text-sky-600'}>
+                {cell.value}
+
+                {cell.word.filter(word => word.foundBy.length > 0).map(word => {
+                    // we should decide whether to process player found words as well
+                    let rotation = null
+                    if (word.direction === "W" || word.direction === "E") {
+                        rotation = 'rotate-0'
+                    } else if (word.direction === "N" || word.direction === "S") {
+                        rotation = 'rotate-90'
+                    } else if (word.direction === "NW" || word.direction === "SE") {
+                        rotation = 'rotate-45'
+                    } else if (word.direction === "NE" || word.direction === "SW") {
+                        rotation = '-rotate-45'
+                    }
+
+                    return (
+                        <div className={`absolute w-full h-1 opacity-50 bg-red-500 rounded-full ${rotation}`}/>
+                    )
+
+                })}
+            </div>
+
         </div>
-    </div>
-))
+    )
+)
 
 
 export default MoveGrid;

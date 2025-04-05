@@ -4,6 +4,7 @@ import {getDirectionVector} from "~/types/direction";
 import type Player from "~/types/player";
 import type Word from "~/types/word";
 import type Cell from "~/types/cell";
+import {FinishGame} from "~/api/reducers";
 
 type IBoard = {
     id: string,
@@ -50,7 +51,6 @@ class Board implements IBoard {
                 row: ridx,
                 col: cidx,
                 value: "?",
-                foundBy: [],
                 word: []
             }))
 
@@ -75,7 +75,6 @@ class Board implements IBoard {
 
             while (currentRow !== endRow || currentCol !== endCol) {
                 this.grid[currentRow][currentCol].value = sequence.word.at(step)
-                this.grid[currentRow][currentCol].foundBy = sequence.foundBy
 
                 if (!this.grid[currentRow][currentCol].word.find(word => word === sequence))
                     this.grid[currentRow][currentCol].word.push(sequence)
