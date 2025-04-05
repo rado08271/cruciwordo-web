@@ -137,27 +137,32 @@ const CellItem = React.memo((
             onMouseOver={() => handleCellMouseOver(cell)}
             onMouseDown={() => handleCellMouseDown(cell)}
             className={`relative col-span-1 rounded-sm border-2 border-sky-200 aspect-square text-xs md:text-lg w-5 h-5 md:w-7 md:h-7 cursor-pointer transition-colors delay-100 duration-300 ease-in-out ${hovered ? 'bg-sky-500' : `bg-white hover:bg-sky-100`}`}>
-            <div className={'flex w-full h-full justify-center items-center  font-mono text-center text-sky-600'}>
+            <div className={'flex w-full h-full justify-center items-center font-mono text-center text-sky-600'}>
                 {cell.value}
 
-                {cell.word.filter(word => word.foundBy.length > 0).map(word => {
-                    // we should decide whether to process player found words as well
-                    let rotation = null
-                    if (word.direction === "W" || word.direction === "E") {
-                        rotation = 'rotate-0'
-                    } else if (word.direction === "N" || word.direction === "S") {
-                        rotation = 'rotate-90'
-                    } else if (word.direction === "NW" || word.direction === "SE") {
-                        rotation = 'rotate-45'
-                    } else if (word.direction === "NE" || word.direction === "SW") {
-                        rotation = '-rotate-45'
-                    }
+                {/*<div className={`absolute w-full h-full flex flex-row justify-center items-center`}>*/}
+                    {cell.word.filter(word => word.foundBy.length > 0).map(word => {
+                        // we should decide whether to process player found words as well
+                        let rotation = null
+                        if (word.direction === "W" || word.direction === "E") {
+                            rotation = 'rotate-0'
+                        } else if (word.direction === "N" || word.direction === "S") {
+                            rotation = 'rotate-90'
+                        } else if (word.direction === "NW" || word.direction === "SE") {
+                            rotation = 'rotate-45'
+                        } else if (word.direction === "NE" || word.direction === "SW") {
+                            rotation = '-rotate-45'
+                        }
 
-                    return (
-                        <div className={`absolute w-full h-1 opacity-50 bg-red-500 rounded-full ${rotation}`}/>
-                    )
+                        return (
+                            <div
+                                style={{backgroundColor: word.foundBy.length > 0 ? `#${word.foundBy.at(0).ident3hex}` : ""}}
+                                className={`absolute w-full h-1 opacity-50 bg-red-500 rounded-full ${rotation}`}
+                            />
+                        )
 
-                })}
+                    })}
+                {/*</div>*/}
             </div>
 
         </div>

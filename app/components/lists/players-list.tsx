@@ -23,7 +23,7 @@ const PlayersList = ({boardId, players}: Props) => {
             {/*{isLoading && <Loading></Loading>}*/}
             <ul className={'flex flex-row gap-2 min-h-8'}>
                 {players.map((player, index) => {
-                    if (index > 1) {
+                    if (index > 5) {
                         return <TbDots className={'text-stone-300 self-center'}/>
                     } else {
                         return (

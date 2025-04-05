@@ -58,9 +58,9 @@ const PlayableGrid = ({board, words}: Props) => {
                         setIsLoading(false)
 
                         // To make sure it focuses on board grid
-                        // document.getElementById('board_grid').scrollIntoView({
-                        //     behavior: "smooth"
-                        // })
+                        document.getElementById('board_grid').scrollIntoView({
+                            behavior: "smooth"
+                        })
                     })
 
                     joinGameReducer.stop()
@@ -87,6 +87,12 @@ const PlayableGrid = ({board, words}: Props) => {
             const reversedWord = words.find(value => value.word === reversedSequence)
             // in case reversed word is available we can assume there is a palindrome if normalWord && reversedWord are avilable so we will just
             let normalWord = reversedWord ? reversedWord : words.find(value => value.word === normalSequence)
+
+            if (normalWord && normalWord.foundBy.length > 0) {
+                // TODO: Update in ws api service - only one user can find word
+                // in case word was already found there is no need to call reducer again - only return false - race condition will fail!
+                return false
+            }
 
             if (reversedWord) {
                 sequence.reverse()
@@ -134,7 +140,7 @@ const PlayableGrid = ({board, words}: Props) => {
 
 
             <div className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center md:p-24 z-0'}>
-                <div className="relative text-stone-600 max-w-full w-full bg-white rounded-xl p-2 md:p-8 flex flex-col gap-4">
+                <div className="relative text-stone-600 max-w-full min-w-full md:min-w-0 md:max-h-full md:max-w-full bg-white rounded-xl p-2 md:p-8 flex flex-col gap-4">
 
                     <div className="flex justify-end">
                         <PlayersList boardId={board.id} players={players}/>
