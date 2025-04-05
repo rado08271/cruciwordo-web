@@ -1,25 +1,13 @@
-import React, {useEffect, useState} from 'react';
-import useConnection from "~/hooks/use-connection";
-import Loading from "~/components/common/loading/loading";
+import React from 'react';
 import type Word from "~/types/word";
 
 type Props = {
-    boardId: string,
     words: Word[]
 }
 
-const WordsList = ({boardId, words}: Props) => {
-    const [isLoading, setIsLoading] = useState(true)
-    const [conn, connectionState] = useConnection()
-
-
-    useEffect(() => {
-        setIsLoading(false)
-    }, [words]);
-
+const WordsList = ({words}: Props) => {
     return (
         <>
-            {/*{isLoading && <Loading/>}*/}
             <ul className={'grid grid-cols-5 md:grid-cols-3 gap-2'}>
                 {words.map(word => {
                     return (

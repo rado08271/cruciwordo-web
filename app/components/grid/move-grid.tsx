@@ -1,5 +1,5 @@
 "use client"
-import React, {useMemo, useOptimistic, useState} from 'react';
+import React, {useState} from 'react';
 import type Cell from "~/types/cell";
 import useSound from "~/hooks/use-sound";
 
@@ -7,8 +7,6 @@ type Props = {
     grid: Cell[][],
     onSequenceSelect?: (sequence: Cell[]) => boolean
 }
-
-// type SelectionPoint = { rowId: number, colId: number }
 
 const MoveGrid = ({grid, onSequenceSelect}: Props) => {
     const [startPosition, setStartPosition] = useState<Cell | null>(null)
@@ -142,7 +140,7 @@ const CellItem = React.memo((
 
                 {/*<div className={`absolute w-full h-full flex flex-row justify-center items-center`}>*/}
                     {cell.word.filter(word => word.foundBy.length > 0).map(word => {
-                        // we should decide whether to process player found words as well
+                        // decide whether to process player found words as well
                         let rotation = null
                         if (word.direction === "W" || word.direction === "E") {
                             rotation = 'rotate-0'
@@ -156,6 +154,7 @@ const CellItem = React.memo((
 
                         return (
                             <div
+                                key={`strike-${word.word}-${cell.row}-${cell.col}`}
                                 style={{backgroundColor: word.foundBy.length > 0 ? `#${word.foundBy.at(0).ident3hex}` : ""}}
                                 className={`absolute w-full h-1 opacity-50 bg-red-500 rounded-full ${rotation}`}
                             />

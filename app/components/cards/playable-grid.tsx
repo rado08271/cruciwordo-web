@@ -1,11 +1,12 @@
+"use client"
 import React, {useCallback, useEffect, useState} from 'react';
 import {JoinGame, WordIsFound} from "~/api/reducers";
 import useConnection from "~/hooks/use-connection";
 import Loading from "~/components/common/loading/loading";
 import {SubscribeToGamePlayers} from "~/api/subscribers/subscribe-to-game-players";
-import {SubscribeToBoardWords} from "~/api/subscribers/subscribe-to-board-words";
 import type Cell from "~/types/cell";
 import type Board from "~/types/board";
+import ConfettiExplosion, { type ConfettiProps } from 'react-confetti-explosion'
 
 import Player from "~/types/player";
 import Word from "~/types/word";
@@ -15,6 +16,15 @@ import {Identity} from "@clockworklabs/spacetimedb-sdk";
 import WordsList from "~/components/lists/words-list";
 import MoveGrid from "~/components/grid/move-grid";
 import {getDirectionVector} from "~/types/direction";
+import _ from "lodash";
+import {FaTrophy} from "react-icons/fa6";
+
+const confettiProps: ConfettiProps = {
+    force: 0.8,
+    duration: 3000,
+    particleCount: 250,
+    width: 1600,
+}
 
 type Props = {
     board: Board
@@ -75,6 +85,20 @@ const PlayableGrid = ({board, words}: Props) => {
             }
         }
     }, [conn, connState]);
+
+    useEffect(() => {
+        if (conn && connState === "CONNECTED" && players.length > 0) {
+            // first player that can stop the game should stop processing
+            const allFoundWords: Word[] = players.map(player => player.foundWords).reduce((previousValue: Word[], currentValue: Word[]) => [...previousValue, ...currentValue])
+
+            if (_.isEmpty(_.xor(allFoundWords, words))) {
+                console.log("Victorious")
+                // this should be processed elsewhere ideally listen from database
+                // but in case new session is created after game is finished - session state should be already in finished!
+                setGameWon(true)
+            }
+        }
+    }, [conn, connState, players]);
 
     const processSelectedSequence = useCallback((sequence: Cell[]): boolean => {
         console.table(sequence)
@@ -138,9 +162,22 @@ const PlayableGrid = ({board, words}: Props) => {
                 </div>
             }
 
+            {
+                gameWon &&
+                <div
+                    className={'absolute flex flex-col gap-8 w-screen h-screen backdrop-blur justify-center items-center z-10 text-center'}>
+                    <h1 className={'text-stone-500 font-header'}>Congratulations</h1>
+                    <FaTrophy className={'text-yellow-400'}/>
+                    <h4 className={'text-stone-500 text-xl font-medium'}>Game was already finished</h4>
+                    <ConfettiExplosion {...confettiProps} className={'relative z-50'}/>
+                </div>
+            }
 
-            <div className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center md:p-24 z-0'}>
-                <div className="relative text-stone-600 max-w-full min-w-full md:min-w-0 md:max-h-full md:max-w-full bg-white rounded-xl p-2 md:p-8 flex flex-col gap-4">
+
+            <div
+                className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center md:p-24 z-0'}>
+                <div
+                    className="relative text-stone-600 max-w-full min-w-full md:min-w-0 md:max-h-full md:max-w-full bg-white rounded-xl p-2 md:p-8 flex flex-col gap-4">
 
                     <div className="flex justify-end">
                         <PlayersList boardId={board.id} players={players}/>
