@@ -20,9 +20,9 @@ const WordsList = ({boardId, words}: Props) => {
     return (
         <>
             {isLoading && <Loading/>}
-            <ul className={'grid grid-cols-2 gap-2'}>
+            <ul className={'grid grid-cols-3 gap-2'}>
                 {words.map(word => {
-                    return <li key={word.id} className={`relative w-8 aspect-square h-8`}>
+                    return <li key={word.id} className={`relative h-8`}>
                         {(word.foundBy.length > 0)
                             ? <strike>{word.word}</strike>
                             : <>{word.word}</>

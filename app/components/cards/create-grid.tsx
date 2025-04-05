@@ -214,7 +214,7 @@ const CreateGrid = () => {
                     </center>
                     <center className={`flex flex-col gap-2 ${tabName === 'PREVIEW' ? 'flex' : 'hidden'}`}>
                         <section className={'flex flex-col justify-center p-2 border-2 border-dotted rounded-xl'}>
-                            <MoveGrid grid={generateGrid}/>
+                            {/*<MoveGrid grid={generateGrid}/>*/}
                             <p className={'text-md text-center p-4 text-sky-500'}>
                                 This is just a preview click generate to create a similar puzzle!
                             </p>

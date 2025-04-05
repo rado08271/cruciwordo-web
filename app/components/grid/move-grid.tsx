@@ -130,7 +130,7 @@ const CellItem = React.memo((
         onMouseOver={() => handleCellMouseOver(cell)}
         onMouseDown={() => handleCellMouseDown(cell)}
         style={{backgroundColor: cell.foundBy.length > 0 ? `#${cell.foundBy.at(0).ident3hex}` : ''}}
-        className={`col-span-1 rounded-sm border-2 border-sky-200 aspect-square w-7 h-7 cursor-pointer transition-colors delay-100 duration-300 ease-in-out ${hovered ? 'bg-sky-500' : `bg-white hover:bg-sky-100`}`}>
+        className={`col-span-1 rounded-sm border-2 border-sky-200 aspect-square min-w-7 min-h-7 w-7 h-7 cursor-pointer transition-colors delay-100 duration-300 ease-in-out ${hovered ? 'bg-sky-500' : `bg-white hover:bg-sky-100`}`}>
         <div
             className={'flex w-full h-full justify-center text-lg font-mono text-center text-sky-600'}>
             {cell.value}

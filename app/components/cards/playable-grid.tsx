@@ -18,9 +18,10 @@ import {getDirectionVector} from "~/types/direction";
 
 type Props = {
     board: Board
+    words: Word[]
 }
 
-const PlayableGrid = ({board}: Props) => {
+const PlayableGrid = ({board, words}: Props) => {
     const [gameWon, setGameWon] = useState(false);
     const [conn, connState] = useConnection()
     const [isLoading, setIsLoading] = useState(true)
@@ -30,9 +31,6 @@ const PlayableGrid = ({board}: Props) => {
 
     // changing players state happens every time there is a new changed record in database
     const [players, setPlayers] = useState<Player[]>([])
-
-    // loading words will happen only once when board is loaded
-    const [words, setWords] = useState<Word[] | null>(null)
 
     useEffect(() => {
         if (conn && connState === "CONNECTED" && words !== null) {
@@ -48,21 +46,6 @@ const PlayableGrid = ({board}: Props) => {
             }
         }
     }, [conn, connState, words])
-
-    useEffect(() => {
-        if (conn && connState === "CONNECTED") {
-            const boardWordsSub = SubscribeToBoardWords(conn, board.id, wordsPlace => {
-                const processedWords = wordsPlace.map((word) => new Word(word))
-                board.propagateBoardWords(processedWords)
-
-                setWords(processedWords)
-            })
-
-            return () => {
-                // boardWordsSub.unsubscribe()
-            }
-        }
-    }, [conn, connState])
 
     useEffect(() => {
         if (conn && connState === "CONNECTED") {
@@ -167,16 +150,19 @@ const PlayableGrid = ({board}: Props) => {
 
 
             <div className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center p-24 z-0'}>
-                <div
-                    className={`relative text-stone-600 max-w-full lg:w-1/2 w-full bg-white rounded-xl p-8 grid grid-rows-2 grid-cols-6`}>
-                    <div className={'row-start-2 col-start-6 col-span-1 self-end'}>
+                <div className="relative text-stone-600 max-w-full w-full bg-white rounded-xl p-8 flex flex-col">
+
+                    <div className="bg-blue-500">
                         <PlayersList boardId={board.id} players={players}/>
                     </div>
-                    <div className={'row-start-1 col-start-1 col-span-4 row-span-2 self-center w-full'}>
-                        <MoveGrid grid={board.grid} onSequenceSelect={processSelectedSequence}/>
-                    </div>
-                    <div className={'row-start-1 row-span-full col-start-5 col-span-2 self-start'}>
-                        <WordsList boardId={board.id} words={words ?? []}/>
+
+                    <div className={'flex flex-row items-center'}>
+                        <div id={'board_grid'} className="bg-red-500 flex-1 gap-4">
+                            <MoveGrid grid={board.grid} onSequenceSelect={processSelectedSequence}/>
+                        </div>
+                        <div className="bg-green-400">
+                            <WordsList boardId={board.id} words={words ?? []}/>
+                        </div>
                     </div>
                 </div>
             </div>
