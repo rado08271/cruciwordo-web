@@ -60,7 +60,7 @@ const CreateGrid = () => {
 
     useEffect(() => {
         if (connectionState === "CONNECTED" && conn) {
-            const sub = SubscribeToBoardNew(conn, Identity.fromString(localStorage.getItem('identity')), board => {
+            const sub = SubscribeToBoardNew(conn, Identity.fromString(sessionStorage.getItem('identity')), board => {
                 setNewBoard(board)
 
                 // no reason to stay subscribed
