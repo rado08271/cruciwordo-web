@@ -16,6 +16,7 @@ import {GenerateNewBoard} from '~/api/reducers'
 import {SubscribeToBoardNew} from "~/api/subscribers/subscribe-to-board-new";
 import {Identity} from "@clockworklabs/spacetimedb-sdk";
 import type {BoardDatabaseModel} from "@spacetime";
+import type Cell from "~/types/cell";
 
 type SupportedLangType = { language: string, i18n: string, id: string }
 type SupportedGridSize = {
@@ -35,12 +36,12 @@ const SUPPORTED_LANG: SupportedLangType[] = [
     {language: 'Spanish', i18n: 'es', id: 'langauge_es'}
 ]
 const SUPPORTED_GRID: SupportedGridSize[] = [
-    {size: '6x6', cols: 6, rows: 6, id: 'grid_6'},
-    {size: '9x9', cols: 9, rows: 9, id: 'grid_9'},
-    {size: '13x13', cols: 13, rows: 13, id: 'grid_13'},
-    {size: '17x17', cols: 17, rows: 17, id: 'grid_17'},
-    {size: '20x20', cols: 20, rows: 20, id: 'grid_20'},
-    {size: '25x25', cols: 25, rows: 25, id: 'grid_25'},
+    {size: '6x6', cols: 6, rows: 6, id: 'grid_6', max_solution: 12},
+    {size: '9x9', cols: 9, rows: 9, id: 'grid_9', max_solution: 25},
+    {size: '13x13', cols: 13, rows: 13, id: 'grid_13', max_solution: 38},
+    {size: '17x17', cols: 17, rows: 17, id: 'grid_17', max_solution: 52},
+    {size: '20x20', cols: 20, rows: 20, id: 'grid_20', max_solution: 74},
+    {size: '25x25', cols: 25, rows: 25, id: 'grid_25', max_solution: 100},
 ]
 
 const CreateGrid = () => {
@@ -54,7 +55,7 @@ const CreateGrid = () => {
 
     const nav = useNavigate()
 
-    const [error, setError] = useState<string | null>()
+    const [error, setError] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [isCopied, setIsCopied] = useState(false)
 
@@ -88,12 +89,14 @@ const CreateGrid = () => {
     }
 
     const generateGrid = useMemo(() => {
-        const grid: string[][] = []
+        const grid: Cell[][] = []
 
         for (let row = 0; row < gridSize.rows; row++) {
-            const cols: string[] = new Array(gridSize.cols).fill(null).map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')[Math.floor(
+            const cols: Cell[] = new Array(gridSize.cols).fill(null).map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')[Math.floor(
                 Math.random() * 26
-            )])
+            )]).map((value: string, index: number): Cell => ({
+                col: index, row, value, word: []
+            }))
 
             grid.push(cols)
         }
@@ -121,7 +124,7 @@ const CreateGrid = () => {
                                     setIsCopied(true)
                                     setTimeout(() => {
                                         setIsCopied(false)
-                                    }, 4000)
+                                    }, 3000)
                                 }} className={'cursor-pointer transition duration-300 ease-in-out hover:text-sky-500'}/>
                                 {isCopied && <div
                                     className={'absolute w-full text-xs left-0 right-0 top-0 text-center -translate-y-full p-1 backdrop-blur bg-gradient-to-br from-slate-200 to-slate-50 rounded bg-opacity-0 transition duration-1000 ease-in-out'}>Copied
@@ -138,7 +141,7 @@ const CreateGrid = () => {
                     </div>
                 </section>
             </div>}
-            <div className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center p-24'}>
+            <div className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center p-0 md:p-24'}>
                 <form onSubmit={(event) => {
                     event.preventDefault();
                     createBoard(solution, gridSize.rows, gridSize.cols, lang.i18n)
@@ -215,7 +218,7 @@ const CreateGrid = () => {
                     </center>
                     <center className={`flex flex-col gap-2 ${tabName === 'PREVIEW' ? 'flex' : 'hidden'}`}>
                         <section className={'flex flex-col justify-center p-2 border-2 border-dotted rounded-xl'}>
-                            {/*<MoveGrid grid={generateGrid}/>*/}
+                            <MoveGrid grid={generateGrid}/>
                             <p className={'text-md text-center p-4 text-sky-500'}>
                                 This is just a preview click generate to create a similar puzzle!
                             </p>
@@ -230,13 +233,13 @@ const CreateGrid = () => {
                     </section>
                     <section>
                         <span className={'items-center overflow-ellipsis line-clamp-3'}>
-                            <p className={'text-red-500 font-light'}>{error}</p>
+                            <p className={'text-red-500 font-light'}>{error && (error.substring(0, 100) + "..")}</p>
                         </span>
                     </section>
                 </form>
 
                 <section className={'flex flex-col gap-1'}>
-                    <button onClick={() => {
+                <button onClick={() => {
                         setTabName(tabName === 'SETTINGS' ? "PREVIEW" : "SETTINGS")
                     }}
                             className={'text-3xl font-header text-center text-white py-4 px-8 capitalize'}>Show {tabName === 'SETTINGS' ? 'Preview' : 'Settings'}</button>

@@ -10,15 +10,15 @@ const useConnection = (): [typeof DbConnection | null, ConnectionState] => {
     useEffect(() => {
         const connection = new Connection()
             .addOnConnect((connection) => {
-                // console.log("======== DB Connected successfully")
+                console.log("======== DB Connected successfully")
                 setConnection(connection)
             })
             .addOnError((error) => {
-                // console.error("======== DB error", error)
+                console.error("======== DB error", error)
                 setConnectionError(error)
             })
             .addOnStateChangeListener(state => {
-                // console.log("======== DB stated changeds", state)
+                console.log("======== DB stated changeds", state)
                 setConnectionState(state)
             })
 

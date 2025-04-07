@@ -1,11 +1,19 @@
 import type {Route} from "./+types/home";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {Link} from "react-router";
 import FancyTextInput from "~/components/common/input/fancy-text-input";
 import man_standing from '~/assets/man-standing-pointing.png'
 import woman_walking from '~/assets/woman-standing-walking.png'
 import people_talking from '~/assets/people-talking.png'
 import {FaFacebook, FaSquareXTwitter, FaDiscord, FaInstagram, FaLinkedin, FaGithub, FaImage} from "react-icons/fa6";
+import useConnection from "~/hooks/use-connection";
+import {SubscribeToStatsBoardsCount} from "~/api/subscribers/subscribe-to-stats-boards-count";
+import {SubscribeToGameSession} from "~/api/subscribers/subscribe-to-game-session";
+import {Identity} from "@clockworklabs/spacetimedb-sdk";
+import Player from "~/types/player";
+import {SubscribeToStatsGamesFinished} from "~/api/subscribers/subscribe-to-stats-games-finished";
+import {SubscribeToStatsWordsFound} from "~/api/subscribers/subscribe-to-stats-words-found";
+import {SubscribeToStatsAllBoardsCount} from "~/api/subscribers/subscribe-to-stats-all-boards";
 // loaders
 
 //
@@ -19,6 +27,45 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
+    const [connBoard, connStateBoard] = useConnection()
+    const [allBoards, setAllBoards] = useState(0)
+
+    const [connStats, connStatsState] = useConnection()
+    const [userBoards, setUserBoard] = useState(0)
+    const [userGames, setUserGames] = useState(0)
+
+    const [connScore, connScoreState] = useConnection()
+    const [userScore, setUserScore] = useState(0)
+
+    useEffect(() => {
+        if (connBoard && connStateBoard === "CONNECTED") {
+            const allBoardCountSub = SubscribeToStatsAllBoardsCount(connBoard, boardsCount => {
+                setAllBoards(boardsCount)
+            })
+        }
+    }, [connBoard, connStateBoard]);
+
+    useEffect(() => {
+        if (connStats && connStatsState === "CONNECTED" && allBoards > 0) {
+            const boardsCountSub = SubscribeToStatsBoardsCount(connStats, Identity.fromString(sessionStorage.getItem('identity')), boardsCount => {
+                setUserBoard(boardsCount)
+            })
+
+            const gameFinishedCountSub = SubscribeToStatsGamesFinished(connStats, Identity.fromString(sessionStorage.getItem('identity')),  finishedSessionsCount => {
+                setUserGames(finishedSessionsCount)
+            })
+        }
+    }, [connStats, connStatsState, allBoards]);
+
+    useEffect(() => {
+        if (connScore && connScoreState === "CONNECTED" && allBoards > 0) {
+            const wordScoreSub = SubscribeToStatsWordsFound(connScore, Identity.fromString(sessionStorage.getItem('identity')), score => {
+                setUserScore(score)
+            })
+
+        }
+    }, [connScore, connScoreState, allBoards]);
+
     return (
         <>
             <section
@@ -46,11 +93,12 @@ export default function Home() {
                 <FancyTextInput placeholder={'i.e. #cruciwordo'} className={'text-center'}/>
                 <button className={'bg-sky-500 py-2 px-4 rounded-lg text-white text-md'}>Play Now</button>
             </form>
-            <section className={'text-stone-600 w-screen bg-white p-24 overflow-hidden flex flex-col gap-12 justify-center items-center relative'}>
-                <h2 className={'text-5xl font-header'}>Total Games</h2>
-                <h2 className={'text-5xl font-header text-amber-400'}>50</h2>
-                <img src={man_standing} alt={'standing man pointing from humaans'} className={'absolute left-1/4 h-2/3'}/>
-                <img src={woman_walking} alt={'walking woman from humaans'} className={'absolute right-1/4 h-2/3'}/>
+            <section className={'text-stone-600 w-screen bg-white p-24 overflow-hidden flex flex-col gap-6 justify-center items-center relative'}>
+                <h2 className={'text-5xl font-header z-10'}>We have made</h2>
+                <h2 className={'text-5xl font-header text-amber-400'}>{allBoards}</h2>
+                <h2 className={'text-5xl font-header'}>games already!</h2>
+                <img src={man_standing} alt={'standing man pointing from humaans'} className={'absolute invisible md:visible md:left-32 lg:left-64 h-2/3'}/>
+                <img src={woman_walking} alt={'walking woman from humaans'} className={'absolute invisible md:visible md:right-32 lg:right-64 h-2/3'}/>
             </section>
             <section id={'stats'}
                 className={'text-stone-600 w-screen bg-white p-32 overflow-hidden flex flex-row gap-6 justify-center items-center relative'}>
@@ -59,8 +107,8 @@ export default function Home() {
                         <FaImage className={'w-full h-full'}/>
                     </div>
                     <div className={'pb-6'}>
-                        <p className={'font-header text-xl'}>Games Played</p>
-                        <p>8 and counting!</p>
+                        <p className={'font-header text-xl'}>Boards Created</p>
+                        <p>{userBoards === 0 ? "You did not created board yet" : `${userBoards} and counting!`}</p>
                     </div>
                 </article>
                 <article className={'bg-stone-100 flex flex-col rounded-lg p-4 w-full'}>
@@ -68,8 +116,8 @@ export default function Home() {
                         <FaImage className={'w-full h-full'}/>
                     </div>
                     <div className={'pb-6'}>
-                        <p className={'font-header text-xl'}>Games Won</p>
-                        <p>4 and getting better!</p>
+                        <p className={'font-header text-xl'}>Games Finished</p>
+                        <p>{userGames === 0 ? "No games played yet" : `${userGames} and getting better!`}</p>
                     </div>
                 </article>
                 <article className={'bg-stone-100 flex flex-col rounded-lg p-4 w-full'}>
@@ -78,7 +126,7 @@ export default function Home() {
                     </div>
                     <div className={'pb-6'}>
                         <p className={'font-header text-xl'}>Global score</p>
-                        <p>2492 points</p>
+                        <p>{userScore} points</p>
                     </div>
                 </article>
             </section>
