@@ -25,7 +25,6 @@ import {CloseSession} from "./close_session_reducer.ts";
 import {FinishGame} from "./finish_game_reducer.ts";
 import {GenerateNewBoard} from "./generate_new_board_reducer.ts";
 import {JoinGame} from "./join_game_reducer.ts";
-import {SaveWord} from "./save_word_reducer.ts";
 import {WordIsFound} from "./word_is_found_reducer.ts";
 // Import and reexport all table handle types
 import {BoardTableHandle} from "./board_table.ts";
@@ -42,7 +41,6 @@ export {CloseSession};
 export {FinishGame};
 export {GenerateNewBoard};
 export {JoinGame};
-export {SaveWord};
 export {WordIsFound};
 
 export {BoardTableHandle};
@@ -65,7 +63,7 @@ const REMOTE_MODULE = {
         dictionary: {
             tableName: "dictionary",
             rowType: DictionaryDatabaseModel.getTypeScriptAlgebraicType(),
-            primaryKey: "word",
+            primaryKey: "word_id",
         },
         game_session: {
             tableName: "game_session",
@@ -94,10 +92,6 @@ const REMOTE_MODULE = {
         join_game: {
             reducerName: "join_game",
             argsType: JoinGame.getTypeScriptAlgebraicType(),
-        },
-        save_word: {
-            reducerName: "save_word",
-            argsType: SaveWord.getTypeScriptAlgebraicType(),
         },
         word_is_found: {
             reducerName: "word_is_found",
@@ -134,7 +128,6 @@ export type Reducer = never
     | { name: "FinishGame", args: FinishGame }
     | { name: "GenerateNewBoard", args: GenerateNewBoard }
     | { name: "JoinGame", args: JoinGame }
-    | { name: "SaveWord", args: SaveWord }
     | { name: "WordIsFound", args: WordIsFound }
     ;
 
@@ -174,19 +167,19 @@ export class RemoteReducers {
         this.connection.offReducer("finish_game", callback);
     }
 
-    generateNewBoard(rows: number, cols: number, message: string) {
-        const __args = {rows, cols, message};
+    generateNewBoard(rows: number, cols: number, message: string, language: string) {
+        const __args = {rows, cols, message, language};
         let __writer = new BinaryWriter(1024);
         GenerateNewBoard.getTypeScriptAlgebraicType().serialize(__writer, __args);
         let __argsBuffer = __writer.getBuffer();
         this.connection.callReducer("generate_new_board", __argsBuffer, this.setCallReducerFlags.generateNewBoardFlags);
     }
 
-    onGenerateNewBoard(callback: (ctx: ReducerEventContext, rows: number, cols: number, message: string) => void) {
+    onGenerateNewBoard(callback: (ctx: ReducerEventContext, rows: number, cols: number, message: string, language: string) => void) {
         this.connection.onReducer("generate_new_board", callback);
     }
 
-    removeOnGenerateNewBoard(callback: (ctx: ReducerEventContext, rows: number, cols: number, message: string) => void) {
+    removeOnGenerateNewBoard(callback: (ctx: ReducerEventContext, rows: number, cols: number, message: string, language: string) => void) {
         this.connection.offReducer("generate_new_board", callback);
     }
 
@@ -204,22 +197,6 @@ export class RemoteReducers {
 
     removeOnJoinGame(callback: (ctx: ReducerEventContext, boardId: string) => void) {
         this.connection.offReducer("join_game", callback);
-    }
-
-    saveWord(word: string) {
-        const __args = {word};
-        let __writer = new BinaryWriter(1024);
-        SaveWord.getTypeScriptAlgebraicType().serialize(__writer, __args);
-        let __argsBuffer = __writer.getBuffer();
-        this.connection.callReducer("save_word", __argsBuffer, this.setCallReducerFlags.saveWordFlags);
-    }
-
-    onSaveWord(callback: (ctx: ReducerEventContext, word: string) => void) {
-        this.connection.onReducer("save_word", callback);
-    }
-
-    removeOnSaveWord(callback: (ctx: ReducerEventContext, word: string) => void) {
-        this.connection.offReducer("save_word", callback);
     }
 
     wordIsFound(boardId: string, word: string) {
@@ -263,12 +240,6 @@ export class SetReducerFlags {
 
     joinGame(flags: CallReducerFlags) {
         this.joinGameFlags = flags;
-    }
-
-    saveWordFlags: CallReducerFlags = 'FullUpdate';
-
-    saveWord(flags: CallReducerFlags) {
-        this.saveWordFlags = flags;
     }
 
     wordIsFoundFlags: CallReducerFlags = 'FullUpdate';

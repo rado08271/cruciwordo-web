@@ -6,7 +6,7 @@
 // @ts-nocheck
 import {deepEqual, TableCache,} from "@clockworklabs/spacetimedb-sdk";
 import {WordPlacementsDatabaseModel} from "./word_placements_database_model_type";
- import type {EventContext} from ".";
+import type {EventContext} from ".";
 
 /**
  * Table handle for the table `word`.

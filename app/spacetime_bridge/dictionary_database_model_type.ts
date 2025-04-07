@@ -7,6 +7,7 @@
 import {AlgebraicType, BinaryReader, BinaryWriter, ProductTypeElement,} from "@clockworklabs/spacetimedb-sdk";
 
 export type DictionaryDatabaseModel = {
+  wordId: string,
   word: string,
   language: string,
   category: string | undefined,
@@ -22,6 +23,7 @@ export namespace DictionaryDatabaseModel {
   */
   export function getTypeScriptAlgebraicType(): AlgebraicType {
     return AlgebraicType.createProductType([
+      new ProductTypeElement("wordId", AlgebraicType.createStringType()),
       new ProductTypeElement("word", AlgebraicType.createStringType()),
       new ProductTypeElement("language", AlgebraicType.createStringType()),
       new ProductTypeElement("category", AlgebraicType.createOptionType(AlgebraicType.createStringType())),

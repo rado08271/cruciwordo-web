@@ -10,6 +10,7 @@ export type GenerateNewBoard = {
   rows: number,
   cols: number,
   message: string,
+  language: string,
 };
 
 /**
@@ -25,6 +26,7 @@ export namespace GenerateNewBoard {
       new ProductTypeElement("rows", AlgebraicType.createU8Type()),
       new ProductTypeElement("cols", AlgebraicType.createU8Type()),
       new ProductTypeElement("message", AlgebraicType.createStringType()),
+      new ProductTypeElement("language", AlgebraicType.createStringType()),
     ]);
   }
 

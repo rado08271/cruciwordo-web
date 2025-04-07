@@ -6,7 +6,7 @@
 // @ts-nocheck
 import {deepEqual, TableCache,} from "@clockworklabs/spacetimedb-sdk";
 import {DictionaryDatabaseModel} from "./dictionary_database_model_type";
- import type {EventContext} from ".";
+import type {EventContext} from ".";
 
 /**
  * Table handle for the table `dictionary`.
@@ -33,22 +33,22 @@ export class DictionaryTableHandle {
     return this.tableCache.iter();
   }
   /**
-   * Access to the `word` unique index on the table `dictionary`,
+   * Access to the `word_id` unique index on the table `dictionary`,
    * which allows point queries on the field of the same name
-   * via the [`DictionaryWordUnique.find`] method.
+   * via the [`DictionaryWordIdUnique.find`] method.
    *
    * Users are encouraged not to explicitly reference this type,
    * but to directly chain method calls,
-   * like `ctx.db.dictionary.word().find(...)`.
+   * like `ctx.db.dictionary.word_id().find(...)`.
    *
-   * Get a handle on the `word` unique index on the table `dictionary`.
+   * Get a handle on the `word_id` unique index on the table `dictionary`.
    */
-  word = {
-    // Find the subscribed row whose `word` column value is equal to `col_val`,
+  word_id = {
+    // Find the subscribed row whose `word_id` column value is equal to `col_val`,
     // if such a row is present in the client cache.
     find: (col_val: string): DictionaryDatabaseModel | undefined => {
       for (let row of this.tableCache.iter()) {
-        if (deepEqual(row.word, col_val)) {
+        if (deepEqual(row.word_id, col_val)) {
           return row;
         }
       }
