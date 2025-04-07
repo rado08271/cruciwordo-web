@@ -92,7 +92,6 @@ const PlayableGrid = ({board, words}: Props) => {
             const allFoundWords: Word[] = players.map(player => player.foundWords).reduce((previousValue: Word[], currentValue: Word[]) => [...previousValue, ...currentValue])
 
             if (_.isEmpty(_.xor(allFoundWords, words))) {
-                console.log("Victorious")
                 // this should be processed elsewhere ideally listen from database
                 // but in case new session is created after game is finished - session state should be already in finished!
                 setGameWon(true)
@@ -101,8 +100,6 @@ const PlayableGrid = ({board, words}: Props) => {
     }, [conn, connState, players]);
 
     const processSelectedSequence = useCallback((sequence: Cell[]): boolean => {
-        console.table(sequence)
-
         const normalSequence = sequence.map(cell => cell.value).join('')
         const reversedSequence = sequence.map(cell => cell.value).reverse().join('')
 

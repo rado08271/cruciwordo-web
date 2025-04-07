@@ -117,8 +117,8 @@ export function ErrorBoundary({error,}: Route.ErrorBoundaryProps) {
     //  && error === 404) {
     return (
         <>
-            <article className={'w-screen h-screen bg-stone-500 flex flex-row justify-center items-center gap-20'}>
-                <section className={'flex-1 flex flex-col justify-center items-center font-header text-stone-600 gap-4'}>
+            <article className={'w-screen h-screen bg-stone-500 flex flex-col-reverse md:flex-row justify-center items-center gap-4 md:gap-20'}>
+                <section className={'md:flex-1 flex flex-col justify-center items-center font-header text-stone-600 gap-4'}>
                     <div className={'text-5xl'}>{errorStatus}</div>
                     <div className={'h-1 w-1/2 bg-stone-600 rounded'}></div>
                     <div className={'text-md'}>{errorText}</div>
@@ -128,9 +128,10 @@ export function ErrorBoundary({error,}: Route.ErrorBoundaryProps) {
                     </pre>}
                 </section>
 
-                <div className={'h-1/2 w-1 bg-stone-600 rounded'}></div>
+                <div className={'hidden md:visible h-1/2 w-1 bg-stone-600 rounded'}></div>
+                {/*<div className={'visible md:hidden h-1 w-1/2 bg-stone-600 rounded'}></div>*/}
 
-                <section className={'flex-1 flex justify-center items-center'}>
+                <section className={'md:flex-1 flex justify-center items-center'}>
                     <img src={item_not_found} alt={'not found - person who does not care'}/>
                 </section>
             </article>
