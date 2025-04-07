@@ -70,9 +70,9 @@ const Play = ({params, loaderData}: Route.ComponentProps) => {
     const board = new Board(boardModel)
     board.propagateBoardWords(words)
 
-    const [showMenu, setShowMenu] = useState(true)
+    const [showMenu, setShowMenu] = useState(false)
     const [openMenuSpring, omSpringApi] = useSpring(() => ({
-        from: {opacity: 1, left: 0,},
+        from: {opacity: 0, left: -300,},
         to: {opacity: 1, left: 0,},
         reset: true,
         reverse: !showMenu,
@@ -80,7 +80,7 @@ const Play = ({params, loaderData}: Route.ComponentProps) => {
             duration: 200
         }
     }), [showMenu])
-    
+
     return (
         <Suspense fallback={
             <div className={'absolute flex w-screen h-screen backdrop-blur justify-center items-center'}><Loading/>

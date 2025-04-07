@@ -237,9 +237,9 @@ const CellItem = React.memo((
     }: CellProps
 ) => (
         <div
-            // onMouseUp={handleCellMouseUp}
-            // onMouseOver={() => handleCellMouseOver(cell)}
-            // onMouseDown={() => handleCellMouseDown(cell)}
+            onMouseUp={handleCellMouseUp}
+            onMouseOver={() => handleCellMouseOver(cell)}
+            onMouseDown={() => handleCellMouseDown(cell)}
             className={`relative col-span-1 rounded-sm border-2 border-sky-200 aspect-square text-xs md:text-lg w-5 h-5 md:w-7 md:h-7 cursor-pointer transition-colors delay-100 duration-300 ease-in-out ${hovered ? 'bg-sky-500' : `bg-white hover:bg-sky-100`}`}>
             <div className={'flex w-full h-full justify-center items-center font-mono text-center text-sky-600'}>
                 {cell.value}
