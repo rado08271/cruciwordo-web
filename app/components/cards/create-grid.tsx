@@ -69,7 +69,7 @@ const CreateGrid = () => {
         }
     }, [conn, connectionState]);
 
-    const createBoard = (solution: string, rows: number, cols: number) => {
+    const createBoard = (solution: string, rows: number, cols: number, language: string) => {
         if (conn && connectionState === "CONNECTED") {
             setIsLoading(true);
             const generateNewBoard = GenerateNewBoard.builder()
@@ -83,7 +83,7 @@ const CreateGrid = () => {
                 })
                 .build()
 
-            generateNewBoard.execute(rows, cols, solution)
+            generateNewBoard.execute(rows, cols, solution, language)
         }
     }
 
@@ -141,7 +141,7 @@ const CreateGrid = () => {
             <div className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center p-24'}>
                 <form onSubmit={(event) => {
                     event.preventDefault();
-                    createBoard(solution, gridSize.rows, gridSize.cols)
+                    createBoard(solution, gridSize.rows, gridSize.cols, lang.i18n)
                 }}
                       className={`text-stone-600 min-w-1/3 bg-white rounded-xl p-8 flex-col gap-4 justify-around flex`}>
                     <section className={'flex flex-col items-center text-center'}>

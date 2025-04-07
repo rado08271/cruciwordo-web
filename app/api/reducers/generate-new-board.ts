@@ -1,7 +1,7 @@
 import {ReducerBuilderImpl, ReducerImpl} from "~/api/reducers/reducer";
 
 interface IGenerateNewBoard {
-    execute: (rows: number, cols: number, message: string) => void
+    execute: (rows: number, cols: number, message: string, language: string) => void
     stop: () => void
 }
 
@@ -12,10 +12,10 @@ class GenerateNewBoard extends ReducerImpl implements IGenerateNewBoard {
         });
     }
 
-    public execute = ( rows: number, cols: number, message: string) => {
+    public execute = ( rows: number, cols: number, message: string, language: string) => {
         this.conn.reducers.onGenerateNewBoard(this.defaultReducerCallback)
 
-        this.conn.reducers.generateNewBoard(rows, cols, message)
+        this.conn.reducers.generateNewBoard(rows, cols, message, language)
     }
 
     public stop = () => {
