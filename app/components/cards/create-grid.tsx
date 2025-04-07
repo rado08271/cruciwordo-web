@@ -79,6 +79,7 @@ const CreateGrid = () => {
                 })
                 .addOnError((generateError) => {
                     setError(generateError.message);
+                    setIsLoading(false);
                 })
                 .build()
 
