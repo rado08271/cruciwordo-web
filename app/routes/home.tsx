@@ -37,13 +37,13 @@ export function meta({}: Route.MetaArgs) {
         { property: "og:url", content: "https://cruciwordo.com/" },
         { property: "og:title", content: "Cruciwordo - Interactive Multiplayer Word Puzzle Game" },
         { property: "og:description", content: "Join Cruciwordo, the collaborative multiplayer word search puzzle game. Find words together in real-time, unlock solutions, and challenge friends!" },
-        { property: "og:image", content: "https://cruciwordo.com/images/cruciwordo-play-preview.jpg" },
+        { property: "og:image", content: `https://${import.meta.env.VITE_DEFAULT_URL}/images/cruciwordo-social-preview.jpg` },
 
         { property: "twitter:card", content: "summary_large_image" },
         { property: "twitter:url", content: "https://cruciwordo.com/" },
         { property: "twitter:title", content: "Cruciwordo - Interactive Multiplayer Word Puzzle Game" },
         { property: "twitter:description", content: "Join Cruciwordo, the collaborative multiplayer word search puzzle game. Find words together in real-time, unlock solutions, and challenge friends!" },
-        { property: "twitter:image", content: "https://cruciwordo.com/images/cruciwordo-play-preview.jpg" },
+        { property: "twitter:image", content: `https://${import.meta.env.VITE_DEFAULT_URL}/images/cruciwordo-social-preview.jpg` },
 
         { name: "robots", content: "index, follow" },
         { name: "language", content: "English" },

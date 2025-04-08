@@ -16,13 +16,13 @@ export function meta({}: Route.MetaArgs) {
         { property: "og:url", content: "https://cruciwordo.com/create"},
         { property: "og:title", content: "Create a New Puzzle | Cruciwordo"},
         { property: "og:description", content: "Design your own word search puzzle in Cruciwordo. Create custom challenges, share with friends, and play together in real-time."},
-        { property: "og:image", content: "https://cruciwordo.com/images/cruciwordo-play-preview.jpg" },
+        { property: "og:image", content: `https://${import.meta.env.VITE_DEFAULT_URL}/images/cruciwordo-social-preview.jpg` },
 
         { property: "twitter:card", content: "summary_large_image"},
         { property: "twitter:url", content: "https://cruciwordo.com/create"},
         { property: "twitter:title", content: "Create a New Puzzle | Cruciwordo"},
         { property: "twitter:description", content: "Design your own word search puzzle in Cruciwordo. Create custom challenges, share with friends, and play together in real-time."},
-        { property: "twitter:image", content: "https://cruciwordo.com/images/cruciwordo-play-preview.jpg" },
+        { property: "twitter:image", content: `https://${import.meta.env.VITE_DEFAULT_URL}/images/cruciwordo-social-preview.jpg` },
 
         { name: "robots", content: "index, follow"},
         { name: "language", content: "English"},

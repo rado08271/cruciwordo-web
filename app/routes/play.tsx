@@ -30,13 +30,13 @@ export function meta({matches}: Route.MetaArgs) {
         { property: "og:url", content: "https://cruciwordo.com/play" },
         { property: "og:title", content: "Play Puzzle | Cruciwordo Multiplayer Word Game" },
         { property: "og:description", content: "Join a multiplayer word search puzzle on Cruciwordo. Collaborate with friends in real-time to find all words and unlock the hidden solution." },
-        { property: "og:image", content: "https://cruciwordo.com/images/cruciwordo-play-preview.jpg" },
+        { property: "og:image", content: `https://${import.meta.env.VITE_DEFAULT_URL}/images/cruciwordo-social-preview.jpg` },
 
         { property: "twitter:card", content: "summary_large_image" },
         { property: "twitter:url", content: "https://cruciwordo.com/play" },
         { property: "twitter:title", content: "Play Puzzle | Cruciwordo Multiplayer Word Game" },
         { property: "twitter:description", content: "Join a multiplayer word search puzzle on Cruciwordo. Collaborate with friends in real-time to find all words and unlock the hidden solution." },
-        { property: "twitter:image", content: "https://cruciwordo.com/images/cruciwordo-play-preview.jpg" },
+        { property: "twitter:image", content: `https://${import.meta.env.VITE_DEFAULT_URL}/images/cruciwordo-social-preview.jpg` },
 
         { name: "robots", content: "index, follow" },
         { name: "language", content: "English" },
