@@ -2,9 +2,6 @@ import type {Route} from "./+types/home";
 import React, {useEffect, useState} from "react";
 import {Link} from "react-router";
 import FancyTextInput from "~/components/common/input/fancy-text-input";
-import man_standing from '~/assets/man-standing-pointing.png'
-import woman_walking from '~/assets/woman-standing-walking.png'
-import people_talking from '~/assets/people-talking.png'
 import {FaFacebook, FaSquareXTwitter, FaDiscord, FaInstagram, FaLinkedin, FaGithub, FaImage} from "react-icons/fa6";
 import useConnection from "~/hooks/use-connection";
 import {SubscribeToStatsBoardsCount} from "~/api/subscribers/subscribe-to-stats-boards-count";
@@ -14,6 +11,15 @@ import Player from "~/types/player";
 import {SubscribeToStatsGamesFinished} from "~/api/subscribers/subscribe-to-stats-games-finished";
 import {SubscribeToStatsWordsFound} from "~/api/subscribers/subscribe-to-stats-words-found";
 import {SubscribeToStatsAllBoardsCount} from "~/api/subscribers/subscribe-to-stats-all-boards";
+import type {DbConnection} from "@spacetime";
+
+import man_standing from '~/assets/man-standing-pointing.png'
+import woman_walking from '~/assets/woman-standing-walking.png'
+import people_talking from '~/assets/people-talking.png'
+import friends_solving_puzzle from '~/assets/friends-solving-puzzle.png'
+import man_creating_puzzle from '~/assets/man-creating-puzzle.png'
+import person_in_space from '~/assets/person-in-space.png'
+
 // loaders
 
 //
@@ -42,6 +48,10 @@ export default function Home() {
             const allBoardCountSub = SubscribeToStatsAllBoardsCount(connBoard, boardsCount => {
                 setAllBoards(boardsCount)
             })
+
+            return ( () => {
+                // allBoardCountSub.unsubscribe()
+            })
         }
     }, [connBoard, connStateBoard]);
 
@@ -53,6 +63,12 @@ export default function Home() {
 
             const gameFinishedCountSub = SubscribeToStatsGamesFinished(connStats, Identity.fromString(sessionStorage.getItem('identity')),  finishedSessionsCount => {
                 setUserGames(finishedSessionsCount)
+                console.log("games", finishedSessionsCount)
+            })
+
+            return ( () => {
+                // boardsCountSub.unsubscribe()
+                // gameFinishedCountSub.unsubscribe()
             })
         }
     }, [connStats, connStatsState, allBoards]);
@@ -61,10 +77,22 @@ export default function Home() {
         if (connScore && connScoreState === "CONNECTED" && allBoards > 0) {
             const wordScoreSub = SubscribeToStatsWordsFound(connScore, Identity.fromString(sessionStorage.getItem('identity')), score => {
                 setUserScore(score)
+                console.log("Score", score)
             })
 
+            return ( () => {
+                // wordScoreSub.unsubscribe()
+            })
         }
     }, [connScore, connScoreState, allBoards]);
+
+    useEffect(() => {
+        return () => {
+            (connScore as DbConnection).disconnect();
+            (connStats as DbConnection).disconnect();
+            (connBoard as DbConnection).disconnect();
+        }
+    }, [])
 
     return (
         <>
@@ -101,28 +129,30 @@ export default function Home() {
                 <img src={woman_walking} alt={'walking woman from humaans'} className={'absolute invisible md:visible md:right-32 lg:right-64 h-2/3'}/>
             </section>
             <section id={'stats'}
-                className={'text-stone-600 w-screen bg-white p-32 overflow-hidden flex flex-row gap-6 justify-center items-center relative'}>
-                <article className={'bg-stone-100 flex flex-col rounded-lg p-4 w-full'}>
+                className={'text-stone-600 bg-white w-screen p-8 md:p-32 overflow-hidden flex flex-col md:flex-row gap-6 justify-stretch items-stretch relative'}>
+                <article className={'flex-1 bg-stone-100 flex flex-col rounded-lg p-4 w-full'}>
                     <div className={'h-[200px] w-full flex bg-white rounded-lg justify-center items-center'}>
-                        <FaImage className={'w-full h-full'}/>
+                        <img src={man_creating_puzzle} alt={'standing man creating puzzle from humaans'} className={'h-[200px] p-4 object-fill'}/>
                     </div>
                     <div className={'pb-6'}>
                         <p className={'font-header text-xl'}>Boards Created</p>
                         <p>{userBoards === 0 ? "You did not created board yet" : `${userBoards} and counting!`}</p>
                     </div>
                 </article>
-                <article className={'bg-stone-100 flex flex-col rounded-lg p-4 w-full'}>
+                <article className={'flex-1 bg-stone-100 flex flex-col rounded-lg p-4 w-full'}>
                     <div className={'h-[200px] w-full flex bg-white rounded-lg justify-center items-center'}>
-                        <FaImage className={'w-full h-full'}/>
+                        <img src={friends_solving_puzzle} alt={'standing man creating puzzle from humaans'}
+                             className={'h-[200px] p-4 object-fill'}/>
                     </div>
                     <div className={'pb-6'}>
                         <p className={'font-header text-xl'}>Games Finished</p>
-                        <p>{userGames === 0 ? "No games played yet" : `${userGames} and getting better!`}</p>
+                        <p>{userGames === 0 ? "Your first finished game awaits!" : `${userGames} and getting better!`}</p>
                     </div>
                 </article>
-                <article className={'bg-stone-100 flex flex-col rounded-lg p-4 w-full'}>
+                <article className={'flex-1 bg-stone-100 flex flex-col rounded-lg p-4 w-full'}>
                     <div className={'h-[200px] w-full flex bg-white rounded-lg justify-center items-center'}>
-                        <FaImage className={'w-full h-full'}/>
+                        <img src={person_in_space} alt={'standing man creating puzzle from humaans'}
+                             className={'h-[200px] p-4 object-fill'}/>
                     </div>
                     <div className={'pb-6'}>
                         <p className={'font-header text-xl'}>Global score</p>

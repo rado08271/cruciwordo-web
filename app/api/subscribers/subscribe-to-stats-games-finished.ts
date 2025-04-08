@@ -5,7 +5,7 @@ type Subscription = {
     unsubscribe: () => void
 }
 
-const SQL= (identity: Identity) => `SELECT * FROM game_sessions WHERE played_by = 0x${identity.data.toString(16)} AND if_finished = true`
+const SQL= (identity: Identity) => `SELECT * FROM game_session WHERE played_by = 0x${identity.data.toString(16)} AND if_finished = true`
 export const SubscribeToStatsGamesFinished = (conn: DbConnection, identity: Identity, callback: (finishedSessionsCount: number) => void, errorCallback?: (error: Error) => void): Subscription  => {
     if (!conn.isActive) throw new Error("The connection is not active and subscription was stopped")
 
