@@ -77,7 +77,6 @@ export default function Home() {
         if (connScore && connScoreState === "CONNECTED" && allBoards > 0) {
             const wordScoreSub = SubscribeToStatsWordsFound(connScore, Identity.fromString(sessionStorage.getItem('identity')), score => {
                 setUserScore(score)
-                console.log("Score", score)
             })
 
             return ( () => {

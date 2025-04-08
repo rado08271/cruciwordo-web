@@ -4,7 +4,6 @@ import {getDirectionVector} from "~/types/direction";
 import type Player from "~/types/player";
 import type Word from "~/types/word";
 import type Cell from "~/types/cell";
-import {FinishGame} from "~/api/reducers";
 
 type IBoard = {
     id: string,

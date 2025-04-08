@@ -1,6 +1,6 @@
 "use client"
 import React, {useCallback, useEffect, useState} from 'react';
-import {JoinGame, WordIsFound} from "~/api/reducers";
+import {FinishGame, JoinGame, WordIsFound} from "~/api/reducers";
 import useConnection from "~/hooks/use-connection";
 import Loading from "~/components/common/loading/loading";
 import {SubscribeToGamePlayers} from "~/api/subscribers/subscribe-to-game-players";
@@ -98,6 +98,14 @@ const PlayableGrid = ({board, words}: Props) => {
                 // this should be processed elsewhere ideally listen from database
                 // but in case new session is created after game is finished - session state should be already in finished!
                 setGameWon(true)
+                const finishedGameReducer = FinishGame.builder()
+                    .addConnection(conn!)
+                    .addOnSuccess(() => {
+                        finishedGameReducer.stop()
+                    })
+                    .build()
+
+                finishedGameReducer.execute(board.id)
             }
         }
     }, [conn, connState, players]);
