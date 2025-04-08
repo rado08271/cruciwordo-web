@@ -19,6 +19,7 @@ import {getDirectionVector} from "~/types/direction";
 import _ from "lodash";
 import {FaTrophy} from "react-icons/fa6";
 import SolutionList from "~/components/lists/solution-list";
+import {IoCogSharp} from "react-icons/io5";
 
 const confettiProps: ConfettiProps = {
     force: 0.8,
@@ -34,6 +35,7 @@ type Props = {
 
 const PlayableGrid = ({board, words}: Props) => {
     const [gameWon, setGameWon] = useState(false);
+    const [showSolution, setShowSolution] = useState(false);
     const [conn, connState] = useConnection()
     const [isLoading, setIsLoading] = useState(true)
 
@@ -161,23 +163,26 @@ const PlayableGrid = ({board, words}: Props) => {
             }
 
             {
-                gameWon &&
+                (gameWon && !showSolution) &&
                 <div
                     className={'absolute flex flex-col gap-8 w-screen h-screen backdrop-blur justify-center items-center z-10 text-center'}>
                     <h1 className={'text-stone-500 font-header'}>Congratulations</h1>
                     <FaTrophy className={'text-yellow-400'}/>
                     <h4 className={'text-stone-500 text-xl font-medium'}>Game was already finished</h4>
+                    <button className={'py-2 px-4 rounded-lg text-sky-500 text-md flex flex-row gap-3 justify-center items-center'} onClick={() => setShowSolution(true)}>
+                        <h3 className={'font-medium'}>Show Results</h3>
+                    </button>
                     <ConfettiExplosion {...confettiProps} className={'relative z-50'}/>
                 </div>
             }
 
 
-            <div
-                className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center md:p-24 z-0'}>
                 <div
-                    className="relative text-stone-600 max-w-full min-w-full md:min-w-0 md:max-h-full md:max-w-full bg-white rounded-xl p-2 md:p-8 flex flex-col gap-4">
+                    className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center md:p-24 z-0'}>
+                    <div
+                        className="relative text-stone-600 max-w-full min-w-full md:min-w-0 md:max-h-full md:max-w-full bg-white rounded-xl p-2 md:p-8 flex flex-col gap-4">
 
-                    <div className="flex justify-end">
+                        <div className="flex justify-end">
                         <PlayersList boardId={board.id} players={players}/>
                     </div>
 
