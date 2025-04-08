@@ -13,6 +13,8 @@ import Word from "~/types/word";
 import Loading from "~/components/common/loading/loading";
 import {TiThMenu} from "react-icons/ti";
 import {animated, useSpring} from "react-spring";
+import {CloseSession} from "~/api/reducers";
+import useConnection from "~/hooks/use-connection";
 
 type LoaderDataType = {
     boardModel: BoardDatabaseModel,
@@ -66,6 +68,7 @@ const Play = ({params, loaderData}: Route.ComponentProps) => {
     const {boardModel} = loaderData as LoaderDataType
     const {wordsModel} = loaderData as LoaderDataType
 
+    const [conn, connState] = useConnection()
     const words = wordsModel.map(wordModel => new Word(wordModel))
     const board = new Board(boardModel)
     board.propagateBoardWords(words)
@@ -81,6 +84,20 @@ const Play = ({params, loaderData}: Route.ComponentProps) => {
         }
     }), [showMenu])
 
+    const closeMySession = () => {
+        if (conn && connState === "CONNECTED") {
+            const closeSessionReducer = CloseSession.builder()
+                .addConnection(conn)
+                .addOnSuccess(() => {
+                    closeSessionReducer.stop()
+                })
+                .build()
+
+            closeSessionReducer.execute(board.id)
+        }
+    }
+
+
     return (
         <Suspense fallback={
             <div className={'absolute flex w-screen h-screen backdrop-blur justify-center items-center'}><Loading/>
@@ -95,7 +112,7 @@ const Play = ({params, loaderData}: Route.ComponentProps) => {
                 <ul className={'w-2/3 bg-slate-50 h-screen rounded-r-2xl font-sans text-2xl flex flex-col gap-4 justify-center items-center shadow-2xl'}>
                     <Link role={'menuitem'} to={'/'}>Go Home</Link>
                     <Link role={'menuitem'} to={'/create'}>New Game</Link>
-                    <li role={'menuitem'}><strike>Go offline</strike></li>
+                    <li onClick={() => closeMySession()} role={'menuitem'} className={'cursor-pointer'}>Go offline</li>
                 </ul>
             </animated.div>
 

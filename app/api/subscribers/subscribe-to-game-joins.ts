@@ -14,15 +14,15 @@ export const SubscribeToGameJoins = (conn: DbConnection, boardId: string, callba
     const time = new Date().getTime()
     const onInsert = (ctx: EventContext, row: GameSessionDatabaseModel) => {
         // if (ctx.event.tag === "Reducer" && ctx.event.value.reducer.name === "join_game") {
-        if (ctx.event.tag === "Reducer" && ctx.event.value.reducer.name === "join_game") {
+        if (ctx.event.tag === "Reducer" && (ctx.event.value.reducer.name === "join_game" || ctx.event.value.reducer.name === "close_session")) {
             callback(row)
         }
     }
 
     const onUpdate = (ctx: EventContext, row: GameSessionDatabaseModel, newRow: GameSessionDatabaseModel) => {
-        if (newRow.isOnline) {
+        // if (newRow.isOnline) {
             callback(newRow)
-        }
+        // }
 
     }
 

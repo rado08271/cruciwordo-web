@@ -14,7 +14,7 @@ export const SubscribeToGamePlayers = (conn: DbConnection, boardId: string, call
             callback(
                 Array
                     .from(ctx.db.gameSession.iter())
-                    .filter(session => session.isOnline)
+                    // .filter(session => session.isOnline)
             )
 
         }
@@ -24,7 +24,7 @@ export const SubscribeToGamePlayers = (conn: DbConnection, boardId: string, call
         callback(
             Array
                 .from(ctx.db.gameSession.iter())
-                .filter(session => session.isOnline)
+                // .filter(session => session.isOnline)
         )
 
     }
@@ -37,7 +37,7 @@ export const SubscribeToGamePlayers = (conn: DbConnection, boardId: string, call
             callback (
                 Array
                     .from(ctx.db.gameSession.iter())
-                    .filter(session => session.isOnline)
+                    // .filter(session => session.isOnline)
             )
         })
         .subscribe(SQL(boardId))
