@@ -37,6 +37,7 @@ const PlayableGrid = ({board, words}: Props) => {
     const [gameWon, setGameWon] = useState(false);
     const [showSolution, setShowSolution] = useState(false);
     const [conn, connState] = useConnection()
+    const [playerConn, playerConnState] = useConnection()
     const [isLoading, setIsLoading] = useState(true)
 
     // current player instance to track
@@ -61,12 +62,16 @@ const PlayableGrid = ({board, words}: Props) => {
     }, [conn, connState, words])
 
     useEffect(() => {
-        if (conn && connState === "CONNECTED") {
+        if (playerConn && playerConnState === "CONNECTED") {
             setIsLoading(true)
             const joinGameReducer = JoinGame.builder()
-                .addConnection(conn)
+                .addConnection(playerConn)
                 .addOnSuccess(() => {
-                    const gameSessionSub = SubscribeToGameSession(conn, board.id, Identity.fromString(sessionStorage.getItem('identity')), game => {
+                    const gameSessionSub = SubscribeToGameSession(playerConn, board.id, Identity.fromString(sessionStorage.getItem('identity')), game => {
+                        if (!player) joinGameReducer.stop()
+
+                        // FIXME this now allows returning data on update which is not good
+                        // FIXME we have implicit multiple flows for getting current user and all users
                         setPlayerSession(new Player(game))
                         setIsLoading(false)
 
@@ -76,7 +81,6 @@ const PlayableGrid = ({board, words}: Props) => {
                         })
                     })
 
-                    joinGameReducer.stop()
                 })
                 .build()
 
@@ -87,7 +91,7 @@ const PlayableGrid = ({board, words}: Props) => {
                 // joinGameReducer.stop()
             }
         }
-    }, [conn, connState]);
+    }, [playerConn, playerConnState]);
 
     useEffect(() => {
         if (conn && connState === "CONNECTED" && players.length > 0) {
@@ -114,8 +118,9 @@ const PlayableGrid = ({board, words}: Props) => {
         const normalSequence = sequence.map(cell => cell.value).join('')
         const reversedSequence = sequence.map(cell => cell.value).reverse().join('')
 
+        // FIXME : Processing whether player can submit should be done elsewhere
         // we need to make sure in this step it starts in the same cell and ends in the same cell as word
-        if (words) {
+        if (player && player.isOnline && words) {
             const reversedWord = words.find(value => value.word === reversedSequence)
             // in case reversed word is available we can assume there is a palindrome if normalWord && reversedWord are avilable so we will just
             let normalWord = reversedWord ? reversedWord : words.find(value => value.word === normalSequence)
@@ -158,7 +163,7 @@ const PlayableGrid = ({board, words}: Props) => {
         }
 
         return false
-    }, [words, conn, board.id])
+    }, [words, conn, board.id, player])
 
     return (
         <>
