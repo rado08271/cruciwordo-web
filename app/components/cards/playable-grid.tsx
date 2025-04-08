@@ -18,6 +18,7 @@ import MoveGrid from "~/components/grid/move-grid";
 import {getDirectionVector} from "~/types/direction";
 import _ from "lodash";
 import {FaTrophy} from "react-icons/fa6";
+import SolutionList from "~/components/lists/solution-list";
 
 const confettiProps: ConfettiProps = {
     force: 0.8,
@@ -187,6 +188,9 @@ const PlayableGrid = ({board, words}: Props) => {
                         <div className="">
                             <WordsList boardId={board.id} words={words ?? []}/>
                         </div>
+                    </div>
+                    <div>
+                        <SolutionList message={board.message} isSolved={gameWon}/>
                     </div>
                 </div>
             </div>

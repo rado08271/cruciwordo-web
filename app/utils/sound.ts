@@ -30,7 +30,7 @@ sounds["click"] = {
     "p_lpf_resonance": 0,
     "p_hpf_freq": 0,
     "p_hpf_ramp": 0,
-    "sound_vol": 0.25,
+    "sound_vol": 0.10,
     "sample_rate": 44100,
     "sample_size": 8
 };
@@ -60,7 +60,7 @@ sounds['success'] = {
     "p_lpf_resonance": 0,
     "p_hpf_freq": 0.1399912239469387,
     "p_hpf_ramp": 0,
-    "sound_vol": 0.25,
+    "sound_vol": 0.10,
     "sample_rate": 44100,
     "sample_size": 8
 }

@@ -45,12 +45,17 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
     }
 
     const handleCellMouseOver = (cell: Cell) => {
+        const prevCellsCount = selectedCells.length
         if (startPosition) {
             setEndPosition(cell)
 
             const cells = getCellSequence(startPosition, cell)
             setSelectedCells(cells)
-            playClick()
+
+            console.log(prevCellsCount, cells.length)
+            if (prevCellsCount !== cells.length) {
+                playClick()
+            }
         }
     }
 
@@ -73,8 +78,8 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
     }
 
     const handleBoardTouchMove: TouchEventHandler<HTMLElement> = (event) => {
+        const prevCellsCount = selectedCells.length
         if (boardRef.current !== null) {
-
             const cell = getCellAtPosition(event.touches)
 
             if (!cell) return
@@ -84,7 +89,10 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
 
                 const cells = getCellSequence(startPosition, cell)
                 setSelectedCells(cells)
-                playClick()
+
+                if (prevCellsCount !== cells.length) {
+                    playClick()
+                }
             }
 
         }
@@ -193,7 +201,7 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
     }
 
     return (
-        <div ref={containerRef} className={'relative flex justify-center md:p-4 p-1 overflow-hidden rounded-xl bg-sky-50'}>
+        <div ref={containerRef} className={'relative flex justify-center md:p-4 p-3 overflow-hidden rounded-xl bg-blue-50'}>
             <section
                 ref={boardRef}
                 onTouchMove={handleBoardTouchMove}
