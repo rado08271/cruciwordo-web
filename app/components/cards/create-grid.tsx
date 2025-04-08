@@ -117,10 +117,10 @@ const CreateGrid = () => {
                         <div
                             className={'flex flex-row justify-center items-center gap-2 border-sky-300 border-2 py-1 px-2 rounded'}>
                             {/*<MoveGrid grid={generateGrid} />*/}
-                            <p className={'select-all text-sm '}>cruciwordo.com/play/{newBoard?.id}</p>
+                            <p className={'select-all text-sm '}>{import.meta.env.VITE_DEFAULT_URL}/play/{newBoard?.id}</p>
                             <div className={''}>
                                 <IoCopy onClick={() => {
-                                    navigator.clipboard.writeText(`cruciwordo.com/play/${newBoard?.id}`)
+                                    navigator.clipboard.writeText(`${import.meta.env.VITE_DEFAULT_URL}/play/${newBoard?.id}`)
 
                                     setIsCopied(true)
                                     setTimeout(() => {
