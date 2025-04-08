@@ -1,20 +1,51 @@
 import React, {lazy, Suspense, useState} from "react";
 import type {Route} from "./+types/play";
 import type {BoardDatabaseModel, WordPlacementsDatabaseModel} from "@spacetime";
-import {DbConnection} from "@spacetime";
 import {SubscribeToBoardId} from "~/api/subscribers/subscribe-to-board-id";
-import {Identity} from "@clockworklabs/spacetimedb-sdk";
 import {data, Link} from "react-router";
 import Board from "~/types/board";
 import {Connection} from "~/api/connection";
 import {SubscribeToBoardWords} from "~/api/subscribers/subscribe-to-board-words";
-import board from "~/types/board";
 import Word from "~/types/word";
 import Loading from "~/components/common/loading/loading";
 import {TiThMenu} from "react-icons/ti";
 import {animated, useSpring} from "react-spring";
 import {CloseSession} from "~/api/reducers";
 import useConnection from "~/hooks/use-connection";
+
+export function meta({matches}: Route.MetaArgs) {
+    const { boardId } = matches.find((route) => route && route.id === 'routes/play')?.params
+    const { boardModel, wordsModel } = matches.find((route) => route && route.id === 'routes/play')?.data as LoaderDataType
+    console.log("matches", boardModel)
+
+    return [
+        { title: "Play Puzzle | Cruciwordo Multiplayer Word Game"},
+        { name: "title", content: "Play Puzzle | Cruciwordo Multiplayer Word Game" },
+        { name: "description", content: `Join a ${boardModel.rows}x${boardModel.cols} search puzzle with ${wordsModel.length} words on Cruciwordo. Collaborate with friends in real-time to find all words and unlock the hidden solution.` },
+        { name: "keywords", content: "play crossword, online word puzzle, multiplayer word search, collaborative puzzle game, word challenge" },
+        { name: "author", content: "Radoslav Figura" },
+
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "Cruciwordo" },
+        { property: "og:url", content: "https://cruciwordo.com/play" },
+        { property: "og:title", content: "Play Puzzle | Cruciwordo Multiplayer Word Game" },
+        { property: "og:description", content: "Join a multiplayer word search puzzle on Cruciwordo. Collaborate with friends in real-time to find all words and unlock the hidden solution." },
+        { property: "og:image", content: "https://cruciwordo.com/images/cruciwordo-play-preview.jpg" },
+
+        { property: "twitter:card", content: "summary_large_image" },
+        { property: "twitter:url", content: "https://cruciwordo.com/play" },
+        { property: "twitter:title", content: "Play Puzzle | Cruciwordo Multiplayer Word Game" },
+        { property: "twitter:description", content: "Join a multiplayer word search puzzle on Cruciwordo. Collaborate with friends in real-time to find all words and unlock the hidden solution." },
+        { property: "twitter:image", content: "https://cruciwordo.com/images/cruciwordo-play-preview.jpg" },
+
+        { name: "robots", content: "index, follow" },
+        { name: "language", content: "English" },
+
+        { property: "og:url", content: `https://cruciwordo.com/play/${boardId}` },
+        { property: "twitter:url", content: "https://cruciwordo.com/play/${boardId}" },
+    ];
+}
+
 
 type LoaderDataType = {
     boardModel: BoardDatabaseModel,

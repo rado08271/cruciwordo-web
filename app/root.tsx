@@ -21,20 +21,40 @@ export const links: Route.LinksFunction = () => [
     },
     {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+        href: 'https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&family=League+Gothic&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap',
     },
     {rel: "stylesheet", href: stylesheet},
     {rel: "preconnect", href: "https://fonts.googleapis.com"},
     {rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous"},
     {rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap"},
+
+    {rel: "canonical", href: "https://cruciwordo.com/"},
 ];
 
 export function Layout({children}: { children: React.ReactNode }) {
+    const schemeOrgData = {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Cruciwordo",
+        "url": "https://cruciwordo.com",
+        "description": "Interactive multiplayer word search puzzle game where players collaborate to find words and uncover solutions.",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+
     return (
         <html lang="en">
         <head>
             <meta charSet="utf-8"/>
             <meta name="viewport" content="width=device-width, initial-scale=1"/>
+            <script type="application/ld+json">
+                {JSON.stringify(schemeOrgData)}
+            </script>
             <Meta/>
             <Links/>
         </head>
@@ -50,36 +70,6 @@ export function Layout({children}: { children: React.ReactNode }) {
 export default function App() {
     return <Outlet/>;
 }
-
-// export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-//   let message = "Oops!";
-//   let details = "An unexpected error occurred.";
-//   let stack: string | undefined;
-//
-//   if (isRouteErrorResponse(error)) {
-//     message = error.status === 404 ? "404" : "Error";
-//     details =
-//       error.status === 404
-//         ? "The requested page could not be found."
-//         : error.statusText || details;
-//   } else if (import.meta.env.DEV && error && error instanceof Error) {
-//     details = error.message;
-//     stack = error.stack;
-//   }
-//
-//   return (
-//     <main className="ontainer mx-auto">
-//       <h1>{message}</h1>
-//       <p>{details}</p>
-//       {stack && (
-//         <pre className="w-full p-4 overflow-x-auto">
-//           {/* Lets put state management in here */}
-//             <code>{stack}</code>
-//         </pre>
-//       )}
-//     </main>
-//   );
-// }
 
 export function ErrorBoundary({error,}: Route.ErrorBoundaryProps) {
     const errorText = useMemo(() => {

@@ -27,8 +27,27 @@ import person_in_space from '~/assets/person-in-space.png'
 // meta
 export function meta({}: Route.MetaArgs) {
     return [
-        {title: "Welcome to Cruciwordo"},
-        {name: "description", content: "Create and solve keyword search puzzle"},
+        {title: "Cruciwordo - Interactive Multiplayer Word Puzzle Game"},
+        {name: "description", content: "Join Cruciwordo, the collaborative multiplayer word search puzzle game. Find words together in real-time, unlock solutions, and challenge friends!"},
+        {name: "keywords", content: "crossword, word game, multiplayer puzzle, collaborative games, word search, online puzzle, interactive word game"},
+        { name: "author", content: "Radoslav Figura" },
+
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "Cruciwordo" },
+        { property: "og:url", content: "https://cruciwordo.com/" },
+        { property: "og:title", content: "Cruciwordo - Interactive Multiplayer Word Puzzle Game" },
+        { property: "og:description", content: "Join Cruciwordo, the collaborative multiplayer word search puzzle game. Find words together in real-time, unlock solutions, and challenge friends!" },
+        { property: "og:image", content: "https://cruciwordo.com/images/cruciwordo-play-preview.jpg" },
+
+        { property: "twitter:card", content: "summary_large_image" },
+        { property: "twitter:url", content: "https://cruciwordo.com/" },
+        { property: "twitter:title", content: "Cruciwordo - Interactive Multiplayer Word Puzzle Game" },
+        { property: "twitter:description", content: "Join Cruciwordo, the collaborative multiplayer word search puzzle game. Find words together in real-time, unlock solutions, and challenge friends!" },
+        { property: "twitter:image", content: "https://cruciwordo.com/images/cruciwordo-play-preview.jpg" },
+
+        { name: "robots", content: "index, follow" },
+        { name: "language", content: "English" },
+
     ];
 }
 
