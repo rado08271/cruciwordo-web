@@ -17,7 +17,7 @@ const WordsList = ({words}: Props) => {
     return (
         <>
             <ul className={'grid grid-cols-5 md:grid-cols-3 gap-2'}>
-                {words.map((word, index) => {
+                {words.sort((a, b) => a.word.localeCompare(b.word)).map((word, index) => {
                     const spring = wordSprings.at(index)
                     return (
                         <animated.li style={spring} key={word.id} className={`relative h-8 text-xl md:text-3xl`}>
