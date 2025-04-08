@@ -33,7 +33,7 @@ type TabName = 'SETTINGS' | 'PREVIEW'
 const SUPPORTED_LANG: SupportedLangType[] = [
     {language: 'English', i18n: 'en', id: 'langauge_en'},
     {language: 'Slovak', i18n: 'sk', id: 'langauge_sk'},
-    {language: 'Spanish', i18n: 'es', id: 'langauge_es'}
+    // {language: 'Spanish', i18n: 'es', id: 'langauge_es'}
 ]
 const SUPPORTED_GRID: SupportedGridSize[] = [
     {size: '6x6', cols: 6, rows: 6, id: 'grid_6', max_solution: 12},
@@ -48,6 +48,7 @@ const CreateGrid = () => {
     const [lang, onSelectLang] = useState<SupportedLangType>(SUPPORTED_LANG[0])
     const [gridSize, onSelectGridSize] = useState<SupportedGridSize>(SUPPORTED_GRID[0])
     const [solution, onSetSolution] = useState("")
+    const [message, onSetMessage] = useState("")
     const [tabName, setTabName] = useState<TabName>('SETTINGS')
 
     const [conn, connectionState] = useConnection()
@@ -70,8 +71,8 @@ const CreateGrid = () => {
         }
     }, [conn, connectionState]);
 
-    const createBoard = (solution: string, rows: number, cols: number, language: string) => {
-        if (conn && connectionState === "CONNECTED") {
+    const createBoard = (message: string, rows: number, cols: number, language: string) => {
+        if (conn && connectionState === "CONNECTED" && message.length > 0) {
             setIsLoading(true);
             const generateNewBoard = GenerateNewBoard.builder()
                 .addConnection(conn)
@@ -84,7 +85,7 @@ const CreateGrid = () => {
                 })
                 .build()
 
-            generateNewBoard.execute(rows, cols, solution, language)
+            generateNewBoard.execute(rows, cols, message, language)
         }
     }
 
@@ -136,15 +137,17 @@ const CreateGrid = () => {
                                 className={'text-xl cursor-pointer transition duration-300 ease-in-out hover:text-sky-500 hover:scale-125'}/>
                             <IoArrowForward onClick={() => {
                                 nav(`/play/${newBoard?.id}`)
-                            }} className={'cursor-pointer transition duration-300 ease-in-out hover:text-sky-500 hover:scale-125'}/>
+                            }}
+                                            className={'cursor-pointer transition duration-300 ease-in-out hover:text-sky-500 hover:scale-125'}/>
                         </div>
                     </div>
                 </section>
             </div>}
-            <div className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center p-0 md:p-24'}>
+            <div
+                className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center p-0 md:p-24'}>
                 <form onSubmit={(event) => {
                     event.preventDefault();
-                    createBoard(solution, gridSize.rows, gridSize.cols, lang.i18n)
+                    createBoard(message, gridSize.rows, gridSize.cols, lang.i18n)
                 }}
                       className={`text-stone-600 min-w-1/3 bg-white rounded-xl p-8 flex-col gap-4 justify-around flex`}>
                     <section className={'flex flex-col items-center text-center'}>
@@ -201,17 +204,26 @@ const CreateGrid = () => {
                                 <h3 className={'font-bold'}>Hidden message</h3>
                             </label>
                             <input name='solution' id='solution' type={'text'}
-                                   value={solution} onChange={ev => {
-                                const solutionValue = ev.target.value;
-                                onSetSolution(solutionValue)
-                            }}
+                                   value={message}
+                                   onChange={ev => {
+                                       // FIXME : When pressing backspace if input has more than max allowed chars, nothing happens!
+                                       const messageValue = ev.target.value;
+
+                                       const solutionValue = messageValue.split('').filter(value => RegExp("[A-Za-z]").test(value)).join('')
+                                       console.log(messageValue, " and ", solutionValue)
+
+                                       if (gridSize.max_solution && solutionValue.length <= gridSize.max_solution) {
+                                           onSetMessage(messageValue)
+                                           onSetSolution(solutionValue)
+                                       }
+                                   }}
                                    className={'border-sky-100 border-2 py-1 px-4 rounded-lg'}
                                    placeholder={'The tea in Nepal is very hot'}/>
                             <label htmlFor='solution'
                                    className={'flex flex-row items-center justify-end gap-6 text-sm'}>
                                 <span className={'flex flex-row items-center gap-1 font-thin'}>
                                     <p>Remaining:</p>
-                                    <p>{(gridSize.max_solution ? gridSize.max_solution : Math.floor(gridSize.rows * gridSize.cols / 3)) - solution.length}</p>
+                                    <p>{gridSize.max_solution - solution.length}</p>
                                 </span>
                             </label>
                         </section>
@@ -225,8 +237,8 @@ const CreateGrid = () => {
                         </section>
                     </center>
                     <section className={'w-full flex flex-col gap-1'}>
-                        <button
-                            className={'bg-sky-400 py-2 px-4 rounded-lg text-white text-md flex flex-row gap-3 justify-center items-center'}>
+                        <button disabled={(gridSize.max_solution - solution.length < 0)}
+                                className={'disabled:bg-sky-100 bg-sky-400 py-2 px-4 rounded-lg text-white text-md flex flex-row gap-3 justify-center items-center'}>
                             <IoCogSharp/>
                             <h3 className={'font-bold'}>Generate Puzzle</h3>
                         </button>
@@ -239,7 +251,7 @@ const CreateGrid = () => {
                 </form>
 
                 <section className={'flex flex-col gap-1'}>
-                <button onClick={() => {
+                    <button onClick={() => {
                         setTabName(tabName === 'SETTINGS' ? "PREVIEW" : "SETTINGS")
                     }}
                             className={'text-3xl font-header text-center text-white py-4 px-8 capitalize'}>Show {tabName === 'SETTINGS' ? 'Preview' : 'Settings'}</button>
