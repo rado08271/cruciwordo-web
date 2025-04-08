@@ -88,9 +88,9 @@ export default function Home() {
 
     useEffect(() => {
         return () => {
-            (connScore as DbConnection).disconnect();
-            (connStats as DbConnection).disconnect();
-            (connBoard as DbConnection).disconnect();
+            if (connScore) (connScore as DbConnection).disconnect();
+            if (connStats) (connStats as DbConnection).disconnect();
+            if (connBoard) (connBoard as DbConnection).disconnect();
         }
     }, [])
 
