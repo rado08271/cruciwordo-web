@@ -72,6 +72,11 @@ const CreateGrid = () => {
     }, [conn, connectionState]);
 
     const createBoard = (message: string, rows: number, cols: number, language: string) => {
+        if (!message) {
+            setError("You need to fill a message")
+            return
+        }
+
         if (conn && connectionState === "CONNECTED" && message.length > 0) {
             setIsLoading(true);
             const generateNewBoard = GenerateNewBoard.builder()
@@ -147,6 +152,8 @@ const CreateGrid = () => {
                 className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center p-0 md:p-24'}>
                 <form onSubmit={(event) => {
                     event.preventDefault();
+
+
                     createBoard(message, gridSize.rows, gridSize.cols, lang.i18n)
                 }}
                       className={`text-stone-600 min-w-1/3 bg-white rounded-xl p-8 flex-col gap-4 justify-around flex`}>
@@ -202,6 +209,7 @@ const CreateGrid = () => {
                             <label htmlFor='solution' className={'flex flex-row items-center gap-1'}>
                                 <IoKeySharp/>
                                 <h3 className={'font-bold'}>Hidden message</h3>
+                                <h3 className={'text-xs '}>(at least 3 letters)</h3>
                             </label>
                             <input name='solution' id='solution' type={'text'}
                                    value={message}
@@ -210,7 +218,6 @@ const CreateGrid = () => {
                                        const messageValue = ev.target.value;
 
                                        const solutionValue = messageValue.split('').filter(value => RegExp("[A-Za-z]").test(value)).join('')
-                                       console.log(messageValue, " and ", solutionValue)
 
                                        if (gridSize.max_solution && solutionValue.length <= gridSize.max_solution) {
                                            onSetMessage(messageValue)
@@ -237,7 +244,7 @@ const CreateGrid = () => {
                         </section>
                     </center>
                     <section className={'w-full flex flex-col gap-1'}>
-                        <button disabled={(gridSize.max_solution - solution.length < 0)}
+                        <button disabled={(solution.length < 3 || (gridSize.max_solution - solution.length < 0))}
                                 className={'disabled:bg-sky-100 bg-sky-400 py-2 px-4 rounded-lg text-white text-md flex flex-row gap-3 justify-center items-center'}>
                             <IoCogSharp/>
                             <h3 className={'font-bold'}>Generate Puzzle</h3>
