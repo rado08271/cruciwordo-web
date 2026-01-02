@@ -1,5 +1,5 @@
-import {DbConnection, type ErrorContext, type SubscriptionEventContext} from "@spacetime";
-import {DbConnectionBuilder, Identity} from "@clockworklabs/spacetimedb-sdk";
+import { DbConnection, type ErrorContext } from "@spacetime";
+import type { DbConnectionBuilder, Identity } from "spacetimedb";
 
 type ConnectionConnectedListener = (connection: DbConnection) => void
 type ConnectionStateChangeListener = (state: ConnectionState) => void
@@ -7,7 +7,7 @@ type ConnectionErrorListener = (error: Error) => void
 export type ConnectionState = "NONE" | "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "FAILED"
 
 export class Connection  {
-    private dbConnectionBuilder: DbConnectionBuilder<DbConnection, ErrorContext, SubscriptionEventContext>
+    private dbConnectionBuilder: DbConnectionBuilder<DbConnection>
     private dbConnection?: DbConnection
 
     private onConnectedListener?: ConnectionConnectedListener
@@ -30,7 +30,7 @@ export class Connection  {
                     }
 
                     if (this.onConnectedListener) {
-                        this.onConnectedListener(connection)
+                        this.onConnectedListener(this.dbConnection)
                     }
                 } else {
 
@@ -73,14 +73,7 @@ export class Connection  {
         return this
     }
 
-    public connect = () => {
-        this.dbConnectionBuilder.build()
-    }
-
-    public disconnect = () => {
-        if (this.dbConnection) {
-            this.dbConnection.disconnect()
-            this.dbConnection = undefined
-        }
+    public builder = () => {
+        return this.dbConnectionBuilder;
     }
 }

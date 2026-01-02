@@ -7,10 +7,12 @@ import {
     ScrollRestoration,
 } from "react-router";
 
-import type {Route} from "./+types/root";
-import stylesheet from "./app.css?url";
-import React, {useMemo} from "react";
+import React, { useMemo } from "react";
+import { SpacetimeDBProvider } from "spacetimedb/react";
 import item_not_found from "~/assets/item_not_found.png";
+import type { Route } from "./+types/root";
+import { Connection } from "./api/connection";
+import stylesheet from "./app.css?url";
 
 export const links: Route.LinksFunction = () => [
     {rel: "preconnect", href: "https://fonts.googleapis.com"},
@@ -68,7 +70,22 @@ export function Layout({children}: { children: React.ReactNode }) {
 }
 
 export default function App() {
-    return <Outlet/>;
+    const connectionBuilder = new Connection()
+    .addOnConnect(() =>
+        console.log("======== DB Connected successfully")
+    )
+    .addOnError((error) => 
+        console.error("======== DB error", error)
+    )
+    .addOnStateChangeListener((state) => {
+        console.log("======== DB stated changeds", state)
+    }).builder();
+
+    return (
+        <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
+            <Outlet/>
+        </SpacetimeDBProvider>
+    );
 }
 
 export function ErrorBoundary({error,}: Route.ErrorBoundaryProps) {
