@@ -1,8 +1,10 @@
 import React from 'react';
 import {TbDots} from "react-icons/tb";
+import type Board from '~/types/board';
 import type Player from "~/types/player";
 
 type Props = {
+    boardId: Board['id']
     players: Player[]
 }
 

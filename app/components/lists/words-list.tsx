@@ -1,8 +1,9 @@
-import React from 'react';
+import { animated, config, useSprings } from "react-spring";
+import type Board from '~/types/board';
 import type Word from "~/types/word";
-import {useSprings, animated, config} from "react-spring";
 
 type Props = {
+    boardId: Board['id']
     words: Word[]
 }
 
@@ -24,7 +25,7 @@ const WordsList = ({words}: Props) => {
                             {(word.foundBy.length === 0)
                                 ? <a className={'text-stone-500'}>{word.word}</a>
                                 : <a className={'opacity-50'} style={{color: word.foundBy.length > 0 ? `#${word.foundBy.at(0).ident3hex}` : ""}}>
-                                    <strike>{word.word}</strike>
+                                    <a className={"strikethrough"}>{word.word}</a>
                                 </a>
                             }
                         </animated.li>)
