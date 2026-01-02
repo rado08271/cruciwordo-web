@@ -11,8 +11,6 @@ import {
 } from "spacetimedb";
 
 export default {
-  rows: __t.u8(),
-  cols: __t.u8(),
-  message: __t.string(),
+  words: __t.string(),
   language: __t.string(),
 };

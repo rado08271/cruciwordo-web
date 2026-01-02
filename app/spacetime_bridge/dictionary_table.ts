@@ -3,79 +3,16 @@
 
 /* eslint-disable */
 /* tslint:disable */
-// @ts-nocheck
-import {deepEqual, TableCache,} from "@clockworklabs/spacetimedb-sdk";
-import {DictionaryDatabaseModel} from "./dictionary_database_model_type";
-import type {EventContext} from ".";
+import {
+  TypeBuilder as __TypeBuilder,
+  t as __t,
+  type AlgebraicTypeType as __AlgebraicTypeType,
+  type Infer as __Infer,
+} from "spacetimedb";
 
-/**
- * Table handle for the table `dictionary`.
- *
- * Obtain a handle from the [`dictionary`] property on [`RemoteTables`],
- * like `ctx.db.dictionary`.
- *
- * Users are encouraged not to explicitly reference this type,
- * but to directly chain method calls,
- * like `ctx.db.dictionary.on_insert(...)`.
- */
-export class DictionaryTableHandle {
-  tableCache: TableCache<DictionaryDatabaseModel>;
-
-  constructor(tableCache: TableCache<DictionaryDatabaseModel>) {
-    this.tableCache = tableCache;
-  }
-
-  count(): number {
-    return this.tableCache.count();
-  }
-
-  iter(): Iterable<DictionaryDatabaseModel> {
-    return this.tableCache.iter();
-  }
-  /**
-   * Access to the `word_id` unique index on the table `dictionary`,
-   * which allows point queries on the field of the same name
-   * via the [`DictionaryWordIdUnique.find`] method.
-   *
-   * Users are encouraged not to explicitly reference this type,
-   * but to directly chain method calls,
-   * like `ctx.db.dictionary.word_id().find(...)`.
-   *
-   * Get a handle on the `word_id` unique index on the table `dictionary`.
-   */
-  word_id = {
-    // Find the subscribed row whose `word_id` column value is equal to `col_val`,
-    // if such a row is present in the client cache.
-    find: (col_val: string): DictionaryDatabaseModel | undefined => {
-      for (let row of this.tableCache.iter()) {
-        if (deepEqual(row.word_id, col_val)) {
-          return row;
-        }
-      }
-    },
-  };
-
-  onInsert = (cb: (ctx: EventContext, row: DictionaryDatabaseModel) => void) => {
-    return this.tableCache.onInsert(cb);
-  }
-
-  removeOnInsert = (cb: (ctx: EventContext, row: DictionaryDatabaseModel) => void) => {
-    return this.tableCache.removeOnInsert(cb);
-  }
-
-  onDelete = (cb: (ctx: EventContext, row: DictionaryDatabaseModel) => void) => {
-    return this.tableCache.onDelete(cb);
-  }
-
-  removeOnDelete = (cb: (ctx: EventContext, row: DictionaryDatabaseModel) => void) => {
-    return this.tableCache.removeOnDelete(cb);
-  }
-
-  // Updates are only defined for tables with primary keys.
-  onUpdate = (cb: (ctx: EventContext, oldRow: DictionaryDatabaseModel, newRow: DictionaryDatabaseModel) => void) => {
-    return this.tableCache.onUpdate(cb);
-  }
-
-  removeOnUpdate = (cb: (ctx: EventContext, onRow: DictionaryDatabaseModel, newRow: DictionaryDatabaseModel) => void) => {
-    return this.tableCache.removeOnUpdate(cb);
-  }}
+export default __t.row({
+  wordId: __t.string().primaryKey().name("word_id"),
+  word: __t.string(),
+  language: __t.string(),
+  category: __t.option(__t.string()),
+});

@@ -3,36 +3,14 @@
 
 /* eslint-disable */
 /* tslint:disable */
-// @ts-nocheck
-import {AlgebraicType, BinaryReader, BinaryWriter, ProductTypeElement,} from "@clockworklabs/spacetimedb-sdk";
+import {
+  TypeBuilder as __TypeBuilder,
+  t as __t,
+  type AlgebraicTypeType as __AlgebraicTypeType,
+  type Infer as __Infer,
+} from "spacetimedb";
 
-export type WordIsFound = {
-  boardId: string,
-  word: string,
+export default {
+  boardId: __t.string(),
+  word: __t.string(),
 };
-
-/**
- * A namespace for generated helper functions.
- */
-export namespace WordIsFound {
-  /**
-  * A function which returns this type represented as an AlgebraicType.
-  * This function is derived from the AlgebraicType used to generate this type.
-  */
-  export function getTypeScriptAlgebraicType(): AlgebraicType {
-    return AlgebraicType.createProductType([
-      new ProductTypeElement("boardId", AlgebraicType.createStringType()),
-      new ProductTypeElement("word", AlgebraicType.createStringType()),
-    ]);
-  }
-
-  export function serialize(writer: BinaryWriter, value: WordIsFound): void {
-    WordIsFound.getTypeScriptAlgebraicType().serialize(writer, value);
-  }
-
-  export function deserialize(reader: BinaryReader): WordIsFound {
-    return WordIsFound.getTypeScriptAlgebraicType().deserialize(reader);
-  }
-
-}
-

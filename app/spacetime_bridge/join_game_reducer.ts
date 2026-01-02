@@ -3,34 +3,13 @@
 
 /* eslint-disable */
 /* tslint:disable */
-// @ts-nocheck
-import {AlgebraicType, BinaryReader, BinaryWriter, ProductTypeElement,} from "@clockworklabs/spacetimedb-sdk";
+import {
+  TypeBuilder as __TypeBuilder,
+  t as __t,
+  type AlgebraicTypeType as __AlgebraicTypeType,
+  type Infer as __Infer,
+} from "spacetimedb";
 
-export type JoinGame = {
-  boardId: string,
+export default {
+  boardId: __t.string(),
 };
-
-/**
- * A namespace for generated helper functions.
- */
-export namespace JoinGame {
-  /**
-  * A function which returns this type represented as an AlgebraicType.
-  * This function is derived from the AlgebraicType used to generate this type.
-  */
-  export function getTypeScriptAlgebraicType(): AlgebraicType {
-    return AlgebraicType.createProductType([
-      new ProductTypeElement("boardId", AlgebraicType.createStringType()),
-    ]);
-  }
-
-  export function serialize(writer: BinaryWriter, value: JoinGame): void {
-    JoinGame.getTypeScriptAlgebraicType().serialize(writer, value);
-  }
-
-  export function deserialize(reader: BinaryReader): JoinGame {
-    return JoinGame.getTypeScriptAlgebraicType().deserialize(reader);
-  }
-
-}
-

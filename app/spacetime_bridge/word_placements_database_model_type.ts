@@ -3,47 +3,21 @@
 
 /* eslint-disable */
 /* tslint:disable */
-// @ts-nocheck
-import {AlgebraicType, BinaryReader, BinaryWriter, ProductTypeElement,} from "@clockworklabs/spacetimedb-sdk";
+import {
+  TypeBuilder as __TypeBuilder,
+  t as __t,
+  type AlgebraicTypeType as __AlgebraicTypeType,
+  type Infer as __Infer,
+} from "spacetimedb";
 
-export type WordPlacementsDatabaseModel = {
-  id: string,
-  boardId: string,
-  direction: string,
-  wordId: string,
-  startRow: number,
-  startCol: number,
-  word: string,
-};
-
-/**
- * A namespace for generated helper functions.
- */
-export namespace WordPlacementsDatabaseModel {
-  /**
-  * A function which returns this type represented as an AlgebraicType.
-  * This function is derived from the AlgebraicType used to generate this type.
-  */
-  export function getTypeScriptAlgebraicType(): AlgebraicType {
-    return AlgebraicType.createProductType([
-      new ProductTypeElement("id", AlgebraicType.createStringType()),
-      new ProductTypeElement("boardId", AlgebraicType.createStringType()),
-      new ProductTypeElement("direction", AlgebraicType.createStringType()),
-      new ProductTypeElement("wordId", AlgebraicType.createStringType()),
-      new ProductTypeElement("startRow", AlgebraicType.createU8Type()),
-      new ProductTypeElement("startCol", AlgebraicType.createU8Type()),
-      new ProductTypeElement("word", AlgebraicType.createStringType()),
-    ]);
-  }
-
-  export function serialize(writer: BinaryWriter, value: WordPlacementsDatabaseModel): void {
-    WordPlacementsDatabaseModel.getTypeScriptAlgebraicType().serialize(writer, value);
-  }
-
-  export function deserialize(reader: BinaryReader): WordPlacementsDatabaseModel {
-    return WordPlacementsDatabaseModel.getTypeScriptAlgebraicType().deserialize(reader);
-  }
-
-}
+export default __t.object("WordPlacementsDatabaseModel", {
+  id: __t.string(),
+  boardId: __t.string(),
+  direction: __t.string(),
+  wordId: __t.string(),
+  startRow: __t.u8(),
+  startCol: __t.u8(),
+  word: __t.string(),
+});
 
 

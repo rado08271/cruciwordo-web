@@ -3,54 +3,21 @@
 
 /* eslint-disable */
 /* tslint:disable */
-// @ts-nocheck
 import {
-  AlgebraicType,
-  BinaryReader,
-  BinaryWriter,
-  Identity,
-  ProductTypeElement,
-  Timestamp,
-} from "@clockworklabs/spacetimedb-sdk";
+  TypeBuilder as __TypeBuilder,
+  t as __t,
+  type AlgebraicTypeType as __AlgebraicTypeType,
+  type Infer as __Infer,
+} from "spacetimedb";
 
-export type GameSessionDatabaseModel = {
-  id: string,
-  boardId: string,
-  startedDate: Timestamp,
-  playedBy: Identity,
-  finished: boolean,
-  isOnline: boolean,
-  foundWords: string,
-};
-
-/**
- * A namespace for generated helper functions.
- */
-export namespace GameSessionDatabaseModel {
-  /**
-  * A function which returns this type represented as an AlgebraicType.
-  * This function is derived from the AlgebraicType used to generate this type.
-  */
-  export function getTypeScriptAlgebraicType(): AlgebraicType {
-    return AlgebraicType.createProductType([
-      new ProductTypeElement("id", AlgebraicType.createStringType()),
-      new ProductTypeElement("boardId", AlgebraicType.createStringType()),
-      new ProductTypeElement("startedDate", AlgebraicType.createTimestampType()),
-      new ProductTypeElement("playedBy", AlgebraicType.createIdentityType()),
-      new ProductTypeElement("finished", AlgebraicType.createBoolType()),
-      new ProductTypeElement("isOnline", AlgebraicType.createBoolType()),
-      new ProductTypeElement("foundWords", AlgebraicType.createStringType()),
-    ]);
-  }
-
-  export function serialize(writer: BinaryWriter, value: GameSessionDatabaseModel): void {
-    GameSessionDatabaseModel.getTypeScriptAlgebraicType().serialize(writer, value);
-  }
-
-  export function deserialize(reader: BinaryReader): GameSessionDatabaseModel {
-    return GameSessionDatabaseModel.getTypeScriptAlgebraicType().deserialize(reader);
-  }
-
-}
+export default __t.object("GameSessionDatabaseModel", {
+  id: __t.string(),
+  boardId: __t.string(),
+  startedDate: __t.timestamp(),
+  playedBy: __t.identity(),
+  finished: __t.bool(),
+  isOnline: __t.bool(),
+  foundWords: __t.string(),
+});
 
 

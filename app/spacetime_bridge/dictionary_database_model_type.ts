@@ -3,41 +3,18 @@
 
 /* eslint-disable */
 /* tslint:disable */
-// @ts-nocheck
-import {AlgebraicType, BinaryReader, BinaryWriter, ProductTypeElement,} from "@clockworklabs/spacetimedb-sdk";
+import {
+  TypeBuilder as __TypeBuilder,
+  t as __t,
+  type AlgebraicTypeType as __AlgebraicTypeType,
+  type Infer as __Infer,
+} from "spacetimedb";
 
-export type DictionaryDatabaseModel = {
-  wordId: string,
-  word: string,
-  language: string,
-  category: string | undefined,
-};
-
-/**
- * A namespace for generated helper functions.
- */
-export namespace DictionaryDatabaseModel {
-  /**
-  * A function which returns this type represented as an AlgebraicType.
-  * This function is derived from the AlgebraicType used to generate this type.
-  */
-  export function getTypeScriptAlgebraicType(): AlgebraicType {
-    return AlgebraicType.createProductType([
-      new ProductTypeElement("wordId", AlgebraicType.createStringType()),
-      new ProductTypeElement("word", AlgebraicType.createStringType()),
-      new ProductTypeElement("language", AlgebraicType.createStringType()),
-      new ProductTypeElement("category", AlgebraicType.createOptionType(AlgebraicType.createStringType())),
-    ]);
-  }
-
-  export function serialize(writer: BinaryWriter, value: DictionaryDatabaseModel): void {
-    DictionaryDatabaseModel.getTypeScriptAlgebraicType().serialize(writer, value);
-  }
-
-  export function deserialize(reader: BinaryReader): DictionaryDatabaseModel {
-    return DictionaryDatabaseModel.getTypeScriptAlgebraicType().deserialize(reader);
-  }
-
-}
+export default __t.object("DictionaryDatabaseModel", {
+  wordId: __t.string(),
+  word: __t.string(),
+  language: __t.string(),
+  category: __t.option(__t.string()),
+});
 
 
