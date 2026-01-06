@@ -1,5 +1,5 @@
-import {Identity, Timestamp} from "@clockworklabs/spacetimedb-sdk";
-import type {GameSessionDatabaseModel} from "@spacetime";
+import type { Identity, Infer, Timestamp } from "spacetimedb";
+import type { GameSessionDatabaseModel } from "@spacetime";
 import type Word from "~/types/word";
 
 type IPlayer = {
@@ -14,7 +14,6 @@ type IPlayer = {
 }
 
 class Player implements IPlayer {
-    private gameSessionDatabaseModel: GameSessionDatabaseModel
     public boardId: string;
     public finished: boolean;
     public id: string;
@@ -24,8 +23,7 @@ class Player implements IPlayer {
     public startedDate: Timestamp;
     public foundWords: Word[];
 
-    constructor(gameSessionDatabaseModel: GameSessionDatabaseModel) {
-        this.gameSessionDatabaseModel = gameSessionDatabaseModel
+    constructor(gameSessionDatabaseModel: Infer<typeof GameSessionDatabaseModel>) {
 
         this.boardId = gameSessionDatabaseModel.boardId
         this.id = gameSessionDatabaseModel.id
@@ -33,12 +31,12 @@ class Player implements IPlayer {
         this.isOnline = gameSessionDatabaseModel.isOnline
         this.playerIdentity = gameSessionDatabaseModel.playedBy
         this.startedDate = gameSessionDatabaseModel.startedDate
-        this.ident3hex = (gameSessionDatabaseModel.playedBy.data % 0xffffffn).toString(16)
+        this.ident3hex = gameSessionDatabaseModel.playedBy.toHexString()
         this.foundWords = []
     }
 
-    public assignFoundWords = (words: Word[]) => {
-        const playerWords = this.gameSessionDatabaseModel.foundWords.split("|")
+    public assignFoundWords = (gameSessionDatabaseModel: Infer<typeof GameSessionDatabaseModel>, words: Word[], ) => {
+        const playerWords = gameSessionDatabaseModel.foundWords.split("|")
         const foundWords = words.filter(word => playerWords.includes(word.word))
 
         const wordsToUpdate = foundWords.filter(word => !word.playerFoundWord(this))

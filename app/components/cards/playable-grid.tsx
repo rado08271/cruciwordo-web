@@ -1,25 +1,26 @@
 "use client"
-import React, {useCallback, useEffect, useState} from 'react';
-import {FinishGame, JoinGame, WordIsFound} from "~/api/reducers";
-import useConnection from "~/hooks/use-connection";
+import { useCallback, useEffect, useState } from 'react';
+import ConfettiExplosion, { type ConfettiProps } from 'react-confetti-explosion';
+import { FinishGame, JoinGame, WordIsFound } from "~/api/reducers";
+import { SubscribeToGamePlayers } from "~/api/subscribers/subscribe-to-game-players";
 import Loading from "~/components/common/loading/loading";
-import {SubscribeToGamePlayers} from "~/api/subscribers/subscribe-to-game-players";
-import type Cell from "~/types/cell";
+import useConnection from "~/hooks/use-connection";
 import type Board from "~/types/board";
-import ConfettiExplosion, { type ConfettiProps } from 'react-confetti-explosion'
+import type Cell from "~/types/cell";
 
+import _ from "lodash";
+import { FaTrophy } from "react-icons/fa6";
+import { Identity } from "spacetimedb";
+import { SubscribeToGameSession } from "~/api/subscribers/subscribe-to-game-session";
+import MoveGrid from "~/components/grid/move-grid";
+import PlayersList from "~/components/lists/players-list";
+import SolutionList from "~/components/lists/solution-list";
+import WordsList from "~/components/lists/words-list";
+import { getDirectionVector } from "~/types/direction";
 import Player from "~/types/player";
 import Word from "~/types/word";
-import PlayersList from "~/components/lists/players-list";
-import {SubscribeToGameSession} from "~/api/subscribers/subscribe-to-game-session";
-import {Identity} from "@clockworklabs/spacetimedb-sdk";
-import WordsList from "~/components/lists/words-list";
-import MoveGrid from "~/components/grid/move-grid";
-import {getDirectionVector} from "~/types/direction";
-import _ from "lodash";
-import {FaTrophy} from "react-icons/fa6";
-import SolutionList from "~/components/lists/solution-list";
-import {IoCogSharp} from "react-icons/io5";
+import { useSpacetimeDB } from 'spacetimedb/react';
+import type { DbConnection } from '~/spacetime_bridge';
 
 const confettiProps: ConfettiProps = {
     force: 0.8,
@@ -36,8 +37,6 @@ type Props = {
 const PlayableGrid = ({board, words}: Props) => {
     const [gameWon, setGameWon] = useState(false);
     const [showSolution, setShowSolution] = useState(false);
-    const [conn, connState] = useConnection()
-    const [playerConn, playerConnState] = useConnection()
     const [isLoading, setIsLoading] = useState(true)
 
     // current player instance to track
@@ -46,11 +45,17 @@ const PlayableGrid = ({board, words}: Props) => {
     // changing players state happens every time there is a new changed record in database
     const [players, setPlayers] = useState<Player[]>([])
 
+    const { getConnection, isActive } = useSpacetimeDB()
+    const connection: DbConnection | null = getConnection();
+
     useEffect(() => {
-        if (conn && connState === "CONNECTED" && words.length > 0) {
-            const gamePlayersSub = SubscribeToGamePlayers(conn, board.id, games => {
-                const processedPlayers = games.map(session => new Player(session))
-                processedPlayers.forEach(player => player.assignFoundWords(words))
+        if (connection !== null && isActive && words.length > 0) {
+            const gamePlayersSub = SubscribeToGamePlayers(connection, board.id, games => {
+                const processedPlayers = games.map(session => {
+                    const player = new Player(session)
+                    player.assignFoundWords(session, words)
+                    return player;
+                })
 
                 setPlayers(processedPlayers)
             })
@@ -59,15 +64,15 @@ const PlayableGrid = ({board, words}: Props) => {
                 // gamePlayersSub.unsubscribe()
             }
         }
-    }, [conn, connState, words])
+    }, [connection, isActive, words])
 
     useEffect(() => {
-        if (playerConn && playerConnState === "CONNECTED") {
+        if (connection !== null && isActive) {
             setIsLoading(true)
             const joinGameReducer = JoinGame.builder()
-                .addConnection(playerConn)
+                .addConnection(connection)
                 .addOnSuccess(() => {
-                    const gameSessionSub = SubscribeToGameSession(playerConn, board.id, Identity.fromString(sessionStorage.getItem('identity')), game => {
+                    const gameSessionSub = SubscribeToGameSession(connection, board.id, Identity.fromString(sessionStorage.getItem('identity') ?? ""), game => {
                         if (!player) joinGameReducer.stop()
 
                         // FIXME this now allows returning data on update which is not good
@@ -76,9 +81,13 @@ const PlayableGrid = ({board, words}: Props) => {
                         setIsLoading(false)
 
                         // To make sure it focuses on board grid
-                        document.getElementById('board_grid').scrollIntoView({
-                            behavior: "smooth"
-                        })
+                        const boardGridElement = document.getElementById('board_grid');
+                        if (boardGridElement !== null) {
+                            boardGridElement.scrollIntoView({
+                                behavior: "smooth"
+                            })
+
+                        }
                     })
 
                 })
@@ -91,10 +100,10 @@ const PlayableGrid = ({board, words}: Props) => {
                 // joinGameReducer.stop()
             }
         }
-    }, [playerConn, playerConnState]);
+    }, [connection, isActive]);
 
     useEffect(() => {
-        if (conn && connState === "CONNECTED" && players.length > 0) {
+        if (connection !== null && isActive && players.length > 0) {
             // first player that can stop the game should stop processing
             const allFoundWords: Word[] = players.map(player => player.foundWords).reduce((previousValue: Word[], currentValue: Word[]) => [...previousValue, ...currentValue])
 
@@ -103,7 +112,7 @@ const PlayableGrid = ({board, words}: Props) => {
                 // but in case new session is created after game is finished - session state should be already in finished!
                 setGameWon(true)
                 const finishedGameReducer = FinishGame.builder()
-                    .addConnection(conn!)
+                    .addConnection(connection!)
                     .addOnSuccess(() => {
                         finishedGameReducer.stop()
                     })
@@ -112,7 +121,7 @@ const PlayableGrid = ({board, words}: Props) => {
                 finishedGameReducer.execute(board.id)
             }
         }
-    }, [conn, connState, players]);
+    }, [connection, isActive, players]);
 
     const processSelectedSequence = useCallback((sequence: Cell[]): boolean => {
         const normalSequence = sequence.map(cell => cell.value).join('')
@@ -152,7 +161,7 @@ const PlayableGrid = ({board, words}: Props) => {
                     sequenceEndCol === wordEndCol && sequenceEndRow === wordEndRow
                 ) {
                     const wordIsFoundReducer = WordIsFound.builder()
-                        .addConnection(conn!)
+                        .addConnection(connection!)
                         .build()
 
                     wordIsFoundReducer.execute(board.id, normalWord.word)
@@ -163,17 +172,19 @@ const PlayableGrid = ({board, words}: Props) => {
         }
 
         return false
-    }, [words, conn, board.id, player])
+    }, [words, connection, board.id, player])
+
+    console.log("reading")
 
     return (
         <>
-            {
+            {/* {
                 isLoading &&
                 <div
                     className={'absolute flex flex-col w-screen h-screen backdrop-blur justify-center items-center z-10 text-center'}>
                     <Loading/>
                 </div>
-            }
+            } */}
 
             {
                 (gameWon && !showSolution) &&

@@ -1,5 +1,6 @@
+import type { Infer } from "spacetimedb";
+import type { WordPlacementsDatabaseModel } from "@spacetime";
 import type {Direction} from "~/types/direction";
-import type {WordPlacementsDatabaseModel} from "@spacetime";
 import {getDirectionFromString} from "~/types/direction";
 import type Player from "~/types/player";
 
@@ -15,7 +16,6 @@ type IWord = {
 }
 
 class Word implements IWord {
-    private wordPlacementDatabaseModel: WordPlacementsDatabaseModel
     public boardId: string;
     public depth: number;
     public direction: Direction;
@@ -25,8 +25,7 @@ class Word implements IWord {
     public startRow: number;
     public word: string;
 
-    constructor(wordPlacementDatabaseModel: WordPlacementsDatabaseModel) {
-        this.wordPlacementDatabaseModel = wordPlacementDatabaseModel
+    constructor(wordPlacementDatabaseModel: Infer<typeof WordPlacementsDatabaseModel>) {
 
         this.id = wordPlacementDatabaseModel.id
         this.boardId = wordPlacementDatabaseModel.boardId

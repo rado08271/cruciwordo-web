@@ -1,4 +1,4 @@
-export type Direction = "NW" | "N" | "NE" | "W" | "E" | "SW" | "S" | "SE"
+export type Direction = "NW" | "N" | "NE" | "W" | "E" | "SW" | "S" | "SE" | "X"
 
 export const getDirectionFromString = (dir: string): Direction => {
     switch (dir) {
@@ -9,7 +9,8 @@ export const getDirectionFromString = (dir: string): Direction => {
         case "E":   return "E";
         case "SW":  return 'SW';
         case "S":   return "S";
-        case "SE":  return "SE";
+        case "SE":  return "SE"; 
+        default: return "X"
     }
 }
 

@@ -18,7 +18,7 @@ export class Connection  {
         this.dbConnectionBuilder = DbConnection.builder()
             .onConnect((connection: DbConnection, identity: Identity, token: string) => {
                 if (!ssr) {
-                    localStorage.setItem('token', token)
+                    localStorage.setItem('auth_token', token)
                     sessionStorage.setItem('identity', identity.toHexString())
                 }
 
@@ -49,12 +49,13 @@ export class Connection  {
                     this.onErrorListener(error)
             })
 
-        this.dbConnectionBuilder.withUri(import.meta.env.VITE_SPACETIME_URL)
+
+        this.dbConnectionBuilder.withUri("ws://localhost:3000")
         this.dbConnectionBuilder.withModuleName(import.meta.env.VITE_SPACETIME_MODULE)
 
         // to ensure we only access local storage when client is available
         if (!ssr) {
-            this.dbConnectionBuilder.withToken(localStorage.getItem('token') || '')
+            this.dbConnectionBuilder.withToken(localStorage.getItem('auth_token') || '')
         }
     }
 

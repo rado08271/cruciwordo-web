@@ -11,7 +11,7 @@ import React, { useMemo } from "react";
 import { SpacetimeDBProvider } from "spacetimedb/react";
 import item_not_found from "~/assets/item_not_found.png";
 import type { Route } from "./+types/root";
-import { Connection } from "./api/connection";
+import { Connection } from "./service/connection";
 import stylesheet from "./app.css?url";
 
 export const links: Route.LinksFunction = () => [
@@ -70,22 +70,7 @@ export function Layout({children}: { children: React.ReactNode }) {
 }
 
 export default function App() {
-    const connectionBuilder = new Connection()
-    .addOnConnect(() =>
-        console.log("======== DB Connected successfully")
-    )
-    .addOnError((error) => 
-        console.error("======== DB error", error)
-    )
-    .addOnStateChangeListener((state) => {
-        console.log("======== DB stated changeds", state)
-    }).builder();
-
-    return (
-        <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
-            <Outlet/>
-        </SpacetimeDBProvider>
-    );
+    return <Outlet/>
 }
 
 export function ErrorBoundary({error,}: Route.ErrorBoundaryProps) {

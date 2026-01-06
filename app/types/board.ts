@@ -1,14 +1,14 @@
-import type {BoardDatabaseModel} from "@spacetime";
-import {Identity, Timestamp} from "@clockworklabs/spacetimedb-sdk";
-import {getDirectionVector} from "~/types/direction";
+import { BoardDatabaseModel } from "@spacetime";
+import type { Infer, Timestamp } from "spacetimedb";
+import type Cell from "~/types/cell";
+import { getDirectionVector } from "~/types/direction";
 import type Player from "~/types/player";
 import type Word from "~/types/word";
-import type Cell from "~/types/cell";
 
 type IBoard = {
     id: string,
     createdDate: Timestamp,
-    createdBy: Player,
+    createdBy?: Player,
     rows: number,
     cols: number,
     message: string,
@@ -17,29 +17,25 @@ type IBoard = {
 };
 
 class Board implements IBoard {
-    private boardDatabaseModel: BoardDatabaseModel
-    public cols: number;
-    public rows: number;
-    public createdBy: Player;
-    public createdDate: Timestamp;
-    public grid: Cell[][];
-    public id: string;
-    public message: string;
-    public solution: string;
+    id: string;
+    createdDate: Timestamp;
+    createdBy?: Player;
+    rows: number;
+    cols: number;
+    message: string;
+    solution: string;
+    grid: Cell[][];
 
-    public constructor(boardDatabaseModel: BoardDatabaseModel) {
-        this.boardDatabaseModel = boardDatabaseModel
-
-        this.cols = boardDatabaseModel.cols
-        this.rows = boardDatabaseModel.rows
-        this.id = boardDatabaseModel.id
-        this.solution = boardDatabaseModel.solution
-        this.createdDate = boardDatabaseModel.createdDate
-        this.message = boardDatabaseModel.message
+    public constructor(boardModel: Infer<typeof BoardDatabaseModel> ) {
+        this.cols = boardModel.cols
+        this.rows = boardModel.rows
+        this.id = boardModel.id
+        this.solution = boardModel.solution
+        this.createdDate = boardModel.createdDate
+        this.message = boardModel.message
 
         // create grid
         this.grid = this.createEmptyGrid()
-
     }
 
     private createEmptyGrid = (): Cell[][] => {
@@ -73,7 +69,7 @@ class Board implements IBoard {
             let step = 0;
 
             while (currentRow !== endRow || currentCol !== endCol) {
-                this.grid[currentRow][currentCol].value = sequence.word.at(step)
+                this.grid[currentRow][currentCol].value = sequence.word.at(step) ?? "?"
 
                 if (!this.grid[currentRow][currentCol].word.find(word => word === sequence))
                     this.grid[currentRow][currentCol].word.push(sequence)
@@ -89,7 +85,7 @@ class Board implements IBoard {
         for (const row of this.grid) {
             for (const cell of row) {
                 if (cell.value === "?") {
-                    cell.value = this.solution.at(solutionIndex)
+                    cell.value = this.solution.at(solutionIndex) ?? "?"
                     solutionIndex += 1
                     if (solutionIndex === this.solution.length) break;
                 }
