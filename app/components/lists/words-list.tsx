@@ -22,12 +22,12 @@ const WordsList = ({words}: Props) => {
                     const spring = wordSprings.at(index)
                     return (
                         <animated.li style={spring} key={word.id} className={`relative h-8 text-xl md:text-3xl`}>
-                            {(word.foundBy.length === 0)
+                            {/* {(word.foundBy.length === 0)
                                 ? <a className={'text-stone-500'}>{word.word}</a>
                                 : <a className={'opacity-50'} style={{color: word.foundBy.length > 0 ? `#${word.foundBy.at(0).ident3hex}` : ""}}>
                                     <a className={"strikethrough"}>{word.word}</a>
                                 </a>
-                            }
+                            } */}
                         </animated.li>)
                 })}
             </ul>

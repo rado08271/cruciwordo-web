@@ -1,24 +1,18 @@
-import type {Route} from "./+types/home";
-import React, {useEffect, useState} from "react";
-import {Link} from "react-router";
+import { DbConnection } from "@spacetime";
+import { useEffect, useState } from "react";
+import { FaDiscord, FaFacebook, FaGithub, FaInstagram, FaLinkedin, FaSquareXTwitter } from "react-icons/fa6";
+import { Link } from "react-router";
 import FancyTextInput from "~/components/common/input/fancy-text-input";
-import {FaFacebook, FaSquareXTwitter, FaDiscord, FaInstagram, FaLinkedin, FaGithub, FaImage} from "react-icons/fa6";
-import useConnection from "~/hooks/use-connection";
-import {SubscribeToStatsBoardsCount} from "~/api/subscribers/subscribe-to-stats-boards-count";
-import {SubscribeToGameSession} from "~/api/subscribers/subscribe-to-game-session";
-import {Identity} from "@clockworklabs/spacetimedb-sdk";
-import Player from "~/types/player";
-import {SubscribeToStatsGamesFinished} from "~/api/subscribers/subscribe-to-stats-games-finished";
-import {SubscribeToStatsWordsFound} from "~/api/subscribers/subscribe-to-stats-words-found";
-import {SubscribeToStatsAllBoardsCount} from "~/api/subscribers/subscribe-to-stats-all-boards";
-import type {DbConnection} from "@spacetime";
+import type { Route } from "./+types/home";
 
-import man_standing from '~/assets/man-standing-pointing.png'
-import woman_walking from '~/assets/woman-standing-walking.png'
-import people_talking from '~/assets/people-talking.png'
-import friends_solving_puzzle from '~/assets/friends-solving-puzzle.png'
-import man_creating_puzzle from '~/assets/man-creating-puzzle.png'
-import person_in_space from '~/assets/person-in-space.png'
+import { Identity } from "spacetimedb";
+import friends_solving_puzzle from '~/assets/friends-solving-puzzle.png';
+import man_creating_puzzle from '~/assets/man-creating-puzzle.png';
+import man_standing from '~/assets/man-standing-pointing.png';
+import people_talking from '~/assets/people-talking.png';
+import person_in_space from '~/assets/person-in-space.png';
+import woman_walking from '~/assets/woman-standing-walking.png';
+import { SpacetimeDBProvider } from "spacetimedb/react";
 
 // loaders
 
@@ -51,69 +45,45 @@ export function meta({}: Route.MetaArgs) {
     ];
 }
 
-export default function Home() {
-    const [connBoard, connStateBoard] = useConnection()
+export const loader = async ({ }: Route.LoaderArgs) => {
+    // const connectionBuilder = DbConnection.builder()
+    //     .withUri('ws://localhost:3000')
+    //     .withModuleName('cruciwordo')
+    //     .onConnect(console.log)
+    //     .onDisconnect(console.log)
+    //     .onConnectError(console.log);
+
+    // console.log("Loader: Created connection builder", connectionBuilder);
+
+
+    return {
+        
+    };
+}
+
+export function HydrateFallback() {
+  return <div>Loading...</div>;
+}
+
+export default function Home({loaderData}: Route.ComponentProps) {
+    // const {connectionBuilder} = loaderData;
+    const connectionBuilder = DbConnection.builder()
+        .withUri('ws://localhost:3000')
+        .withModuleName('cruciwordo')
+        // .withToken(localStorage.getItem('auth_token') || undefined)
+        .onConnect(console.log)
+        .onDisconnect(console.log)
+        .onConnectError(console.log);
+
     const [allBoards, setAllBoards] = useState(0)
 
-    const [connStats, connStatsState] = useConnection()
     const [userBoards, setUserBoard] = useState(0)
     const [userGames, setUserGames] = useState(0)
 
-    const [connScore, connScoreState] = useConnection()
     const [userScore, setUserScore] = useState(0)
 
-    useEffect(() => {
-        if (connBoard && connStateBoard === "CONNECTED") {
-            const allBoardCountSub = SubscribeToStatsAllBoardsCount(connBoard, boardsCount => {
-                setAllBoards(boardsCount)
-            })
-
-            return ( () => {
-                // allBoardCountSub.unsubscribe()
-            })
-        }
-    }, [connBoard, connStateBoard]);
-
-    useEffect(() => {
-        if (connStats && connStatsState === "CONNECTED" && allBoards > 0) {
-            const boardsCountSub = SubscribeToStatsBoardsCount(connStats, Identity.fromString(sessionStorage.getItem('identity')), boardsCount => {
-                setUserBoard(boardsCount)
-            })
-
-            const gameFinishedCountSub = SubscribeToStatsGamesFinished(connStats, Identity.fromString(sessionStorage.getItem('identity')),  finishedSessionsCount => {
-                setUserGames(finishedSessionsCount)
-                console.log("games", finishedSessionsCount)
-            })
-
-            return ( () => {
-                // boardsCountSub.unsubscribe()
-                // gameFinishedCountSub.unsubscribe()
-            })
-        }
-    }, [connStats, connStatsState, allBoards]);
-
-    useEffect(() => {
-        if (connScore && connScoreState === "CONNECTED" && allBoards > 0) {
-            const wordScoreSub = SubscribeToStatsWordsFound(connScore, Identity.fromString(sessionStorage.getItem('identity')), score => {
-                setUserScore(score)
-            })
-
-            return ( () => {
-                // wordScoreSub.unsubscribe()
-            })
-        }
-    }, [connScore, connScoreState, allBoards]);
-
-    useEffect(() => {
-        return () => {
-            if (connScore) (connScore as DbConnection).disconnect();
-            if (connStats) (connStats as DbConnection).disconnect();
-            if (connBoard) (connBoard as DbConnection).disconnect();
-        }
-    }, [])
-
     return (
-        <>
+        <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
             <section
                 className={'text-white w-screen h-screen bg-sky-500 flex flex-col justify-center items-center hover:bg-opacity-50'}>
                 <h1 className={'font-header font-medium text-8xl lg:text-[20em]/[1.1em]'}>CRUCIWORDO</h1>
@@ -191,6 +161,6 @@ export default function Home() {
                 </div>
                 <p>© 2025 - Cruciwordo. All Rights Reserved.</p>
             </section>
-        </>
+        </SpacetimeDBProvider>
     )
 }

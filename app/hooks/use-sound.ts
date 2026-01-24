@@ -7,8 +7,8 @@ const useSound = (sound: SoundKeys) => {
         const plugin = new JsfxrResource();
 
         plugin.init(); //initializes the JSFXR library
-        for (const sound in sounds) {
-            plugin.loadSoundConfig(sound, sounds[sound]);
+        for (const [sound, config] of Object.entries(sounds)) {
+            plugin.loadSoundConfig(sound, config);
         }
 
         return plugin

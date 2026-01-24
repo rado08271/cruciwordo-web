@@ -1,7 +1,7 @@
 import React from 'react';
 import {Outlet} from "react-router";
 
-const Layout = (props) => (
+const Layout = (props: any) => (
     <main className={''}>
         <Outlet/>
     </main>

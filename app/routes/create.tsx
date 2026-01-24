@@ -2,7 +2,7 @@ import React, {lazy, Suspense} from "react";
 import Loading from "~/components/common/loading/loading";
 import type {Route} from "../../.react-router/types/app/routes/+types/home";
 
-const CreateGrid = lazy(() => import('~/components/cards/create-grid.tsx'))
+const CreateGrid = lazy(() => import('~/components/cards/create-grid'))
 
 export function meta({}: Route.MetaArgs) {
     return [

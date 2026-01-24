@@ -11,8 +11,8 @@ import React, { useMemo } from "react";
 import { SpacetimeDBProvider } from "spacetimedb/react";
 import item_not_found from "~/assets/item_not_found.png";
 import type { Route } from "./+types/root";
-import { Connection } from "./service/connection";
 import stylesheet from "./app.css?url";
+import { DbConnection } from "./spacetime_bridge";
 
 export const links: Route.LinksFunction = () => [
     {rel: "preconnect", href: "https://fonts.googleapis.com"},
@@ -49,6 +49,8 @@ export function Layout({children}: { children: React.ReactNode }) {
         }
     }
 
+    
+
     return (
         <html lang="en">
         <head>
@@ -70,7 +72,7 @@ export function Layout({children}: { children: React.ReactNode }) {
 }
 
 export default function App() {
-    return <Outlet/>
+    return <Outlet/>;
 }
 
 export function ErrorBoundary({error,}: Route.ErrorBoundaryProps) {

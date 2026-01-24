@@ -1,5 +1,5 @@
 "use client"
-import React, {TouchEventHandler, useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState, type TouchEventHandler} from 'react';
 import type Cell from "~/types/cell";
 import useSound from "~/hooks/use-sound";
 
@@ -31,7 +31,7 @@ const MoveGrid = ({grid, onSequenceSelect}: Props) => {
             containerRef.current?.addEventListener('touchmove', eventListener, { passive: false})
 
             return () => {
-                containerRef.current?.removeEventListener('touchmove', eventListener, { passive: false})
+                containerRef.current?.removeEventListener('touchmove', eventListener)
             }
         }
     }, [containerRef]);
@@ -240,7 +240,6 @@ type CellProps = {
 const CellItem = React.memo((
     {
         handleCellMouseDown, handleCellMouseOver, handleCellMouseUp,
-        handleCellTouchStart, handleCellTouchMove, handleCellTouchEnd,
         cell, hovered
     }: CellProps
 ) => (
@@ -269,7 +268,7 @@ const CellItem = React.memo((
                         return (
                             <div
                                 key={`strike-${word.word}-${cell.row}-${cell.col}`}
-                                style={{backgroundColor: word.foundBy.length > 0 ? `#${word.foundBy.at(0).ident3hex}` : "", touchAction: "pan-x"}}
+                                style={{backgroundColor: word.foundBy.length > 0 ? `#${word.foundBy}` : "", touchAction: "pan-x"}}
                                 className={`absolute w-full h-1 opacity-50 bg-red-500 rounded-full ${rotation}`}
                             />
                         )

@@ -9,9 +9,7 @@ import Board from "~/types/board";
 import Word from "~/types/word";
 import type { Route } from "./+types/play";
 import type { Infer } from "spacetimedb";
-import { SubscribeToBoardId } from "~/api/subscribers/subscribe-to-board-id";
 import { ssql } from "~/service/api";
-import useInitConnection from "~/hooks/use-connection";
 
 export function meta({matches}: Route.MetaArgs) {
     const { boardId } = matches.find((route) => route && route.id === 'routes/play')?.params!
@@ -70,15 +68,10 @@ const PlayableGrid = lazy(() => import('~/components/cards/playable-grid'))
 const Play = ({params}: Route.ComponentProps) => {
     const boardId = params.boardId;
 
-     const {connectionBuilder} = useInitConnection()
 
     return (
         <Suspense fallback={<Load/>}>
-            { connectionBuilder && 
-                <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
-                    <PlayLayout boardId={boardId}/>
-                </SpacetimeDBProvider>
-            }
+            {/* <PlayLayout boardId={boardId}/> */}
         </Suspense>
     );
 }
@@ -106,7 +99,7 @@ const PlayLayout = ({boardId}: PlayLayoutProps) => {
     return (
         <>
             <div className={'min-h-screen min-w-screen bg-sky-400 text-white font-header text-3xl'}>
-                <PlayableGrid board={board} words={words}/> 
+                {/* <PlayableGrid board={board} words={words}/>  */}
             </div>
         </>
     )
