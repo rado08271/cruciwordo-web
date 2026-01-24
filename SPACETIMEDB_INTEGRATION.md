@@ -1,0 +1,601 @@
+# SpacetimeDB Client Integration with React
+
+This document describes how the SpacetimeDB client functions and integrates within a React application through the use of hooks. This guide will help you understand the data flow, setup, and best practices for using SpacetimeDB in your React project.
+
+## Table of Contents
+
+1. [Core Concepts](#core-concepts)
+2. [Prerequisites](#prerequisites)
+3. [Initial Setup](#initial-setup)
+4. [Connection Configuration](#connection-configuration)
+5. [SpacetimeDBProvider Setup](#spacetimedbprovider-setup)
+6. [Using Hooks](#using-hooks)
+7. [Working with Reducers](#working-with-reducers)
+8. [Querying Tables](#querying-tables)
+9. [Type Inference](#type-inference)
+10. [OIDC Authentication](#oidc-authentication)
+11. [SpacetimeDB Type Mappings](#spacetimedb-type-mappings)
+12. [Best Practices](#best-practices)
+
+## Core Concepts
+
+SpacetimeDB is a real-time database that enables you to build multiplayer and collaborative applications. The client library provides:
+
+- **Real-time data synchronization**: Automatic updates when data changes on the server
+- **Type-safe bindings**: Generated TypeScript types from your database schema
+- **React hooks**: Easy integration with React components
+- **Reducers**: Server-side functions that modify data
+- **Tables**: Reactive data stores that automatically update your UI
+
+### Lifecycle
+
+1. **Generate bindings**: Run `spacetime bridge` to generate TypeScript client code from your SpacetimeDB module
+2. **Initialize connection**: Configure and create a database connection
+3. **Wrap app with provider**: Use `SpacetimeDBProvider` to make the connection available to your app
+4. **Use hooks**: Access data and call reducers using React hooks
+5. **Real-time updates**: Your components automatically re-render when data changes
+
+## Prerequisites
+
+Before integrating SpacetimeDB, you must:
+
+1. Have a SpacetimeDB module deployed and running
+2. Generate client bindings using the SpacetimeDB CLI:
+
+```bash
+spacetime bridge generate --out-dir ./app/spacetime_bridge --lang typescript
+```
+
+This generates TypeScript files in your specified output directory with type-safe bindings for your tables, reducers, and types.
+
+## Initial Setup
+
+Install the SpacetimeDB client library:
+
+```bash
+npm install spacetimedb
+```
+
+The library provides:
+- Core connection management
+- React hooks (`spacetimedb/react`)
+- Type utilities for TypeScript
+
+## Connection Configuration
+
+### Basic Connection
+
+Create a connection builder to configure your SpacetimeDB connection. This is typically done at the root of your application:
+
+```typescript
+import { DbConnection } from './spacetime_bridge';
+
+const connectionBuilder = DbConnection.builder()
+  .withUri('ws://localhost:3000')
+  .withModuleName('cruciwordo')
+  .onConnect((conn, identity, token) => {
+    console.log('Connected with identity:', identity);
+    // Store token for future connections
+    sessionStorage.setItem('auth_token', token);
+  })
+  .onDisconnect(() => {
+    console.log('Disconnected from SpacetimeDB');
+  })
+  .onConnectError((error) => {
+    console.error('Connection error:', error);
+  });
+```
+
+### Connection with Authentication
+
+To persist user identity across sessions, use `localStorage` for identity and `sessionStorage` for the session token:
+
+```typescript
+import { DbConnection } from './spacetime_bridge';
+
+const connectionBuilder = DbConnection.builder()
+  .withUri('ws://localhost:3000')
+  .withModuleName('cruciwordo')
+  .withToken(sessionStorage.getItem('auth_token') || undefined)
+  .onConnect((conn, identity, token) => {
+    // Store identity permanently
+    localStorage.setItem('user_identity', identity.toHexString());
+    // Store token for this session
+    sessionStorage.setItem('auth_token', token);
+  })
+  .onDisconnect(() => {
+    // Clean up session token on disconnect
+    sessionStorage.removeItem('auth_token');
+  })
+  .onConnectError((error) => {
+    console.error('Failed to connect:', error);
+  });
+```
+
+**Storage Strategy:**
+- `localStorage`: Use for long-term data like user identity (persists across browser sessions)
+- `sessionStorage`: Use for temporary data like authentication tokens (cleared when tab closes)
+
+## SpacetimeDBProvider Setup
+
+Wrap your application (or the part that needs database access) with the `SpacetimeDBProvider`:
+
+```typescript
+import { SpacetimeDBProvider } from 'spacetimedb/react';
+import { DbConnection } from './spacetime_bridge';
+
+function Root() {
+  const connectionBuilder = DbConnection.builder()
+    .withUri('ws://localhost:3000')
+    .withModuleName('cruciwordo')
+    .withToken(sessionStorage.getItem('auth_token') || undefined)
+    .onConnect(console.log)
+    .onDisconnect(console.log)
+    .onConnectError(console.log);
+
+  return (
+    <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
+      <App />
+    </SpacetimeDBProvider>
+  );
+}
+```
+
+The provider:
+- Establishes the database connection
+- Makes the connection available to all child components via hooks
+- Manages connection lifecycle and reconnection
+
+## Using Hooks
+
+### Getting Connection and Identity
+
+Use the `useSpacetimeDB` hook to access the connection and identity:
+
+```typescript
+import { useSpacetimeDB } from 'spacetimedb/react';
+import type { DbConnection } from './spacetime_bridge';
+
+function MyComponent() {
+  const conn = useSpacetimeDB<DbConnection>();
+  const { identity, isActive: connected } = conn;
+
+  if (!connected) {
+    return <div>Connecting to database...</div>;
+  }
+
+  return (
+    <div>
+      <p>Connected as: {identity.toHexString()}</p>
+      <p>Status: {connected ? 'Online' : 'Offline'}</p>
+    </div>
+  );
+}
+```
+
+**Available properties:**
+- `identity`: The user's unique Identity object
+- `isActive`: Boolean indicating if the connection is active
+- `getConnection()`: Returns the raw DbConnection instance
+
+## Working with Reducers
+
+Reducers are server-side functions that modify data. Use the `useReducer` hook to call them:
+
+```typescript
+import { useReducer } from 'spacetimedb/react';
+import { reducers } from './spacetime_bridge';
+
+function GameComponent({ boardId }: { boardId: string }) {
+  const joinGame = useReducer(reducers.joinGame);
+  const saveWord = useReducer(reducers.saveWord);
+  const finishGame = useReducer(reducers.finishGame);
+
+  const handleJoinGame = async () => {
+    try {
+      await joinGame(boardId);
+      console.log('Joined game successfully');
+    } catch (error) {
+      console.error('Failed to join game:', error);
+    }
+  };
+
+  const handleSaveWord = async (word: string, x: number, y: number) => {
+    try {
+      await saveWord(boardId, word, x, y);
+      console.log('Word saved');
+    } catch (error) {
+      console.error('Failed to save word:', error);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleJoinGame}>Join Game</button>
+      <button onClick={() => handleSaveWord('HELLO', 0, 0)}>Save Word</button>
+    </div>
+  );
+}
+```
+
+**Key points:**
+- Reducers return Promises
+- Always handle errors appropriately
+- Reducer calls are automatically sent to the server
+- The UI updates automatically when the reducer completes
+
+## Querying Tables
+
+Use the `useTable` hook to subscribe to table data with optional filtering:
+
+### Basic Table Query
+
+```typescript
+import { useTable } from 'spacetimedb/react';
+import { tables } from './spacetime_bridge';
+
+function BoardList() {
+  const [boards, isLoaded] = useTable(tables.board);
+
+  if (!isLoaded) {
+    return <div>Loading boards...</div>;
+  }
+
+  return (
+    <ul>
+      {boards.map(board => (
+        <li key={board.id}>{board.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Filtered Table Query
+
+Use `where` and comparison operators to filter data:
+
+```typescript
+import { useTable, where, eq } from 'spacetimedb/react';
+import { tables, type DbConnection } from './spacetime_bridge';
+import type { GameSessionRow } from './spacetime_bridge';
+
+function ActiveGames({ boardId }: { boardId: string }) {
+  // Filter for a specific board
+  const [games] = useTable<DbConnection, GameSessionRow>(
+    tables.gameSession,
+    where(eq('boardId', boardId))
+  );
+
+  return (
+    <div>
+      <h3>Active Games: {games.length}</h3>
+      <ul>
+        {games.map(game => (
+          <li key={game.id}>
+            Player: {game.playedBy.toHexString()}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### Multiple Filter Conditions
+
+```typescript
+import { useTable, where, eq, and } from 'spacetimedb/react';
+import { tables } from './spacetime_bridge';
+
+function OnlineUsers() {
+  const [onlineUsers] = useTable(
+    tables.user,
+    where(
+      and(
+        eq('online', true),
+        eq('status', 'active')
+      )
+    )
+  );
+
+  return <div>Online users: {onlineUsers.length}</div>;
+}
+```
+
+**Filter operators:**
+- `eq(field, value)`: Equality comparison
+- `and(...conditions)`: Logical AND
+- `or(...conditions)`: Logical OR
+
+## Type Inference
+
+SpacetimeDB generates TypeScript types from your database schema. Use the `Infer` utility type to extract types from generated models:
+
+```typescript
+import type { Infer } from 'spacetimedb';
+import { BoardDatabaseModel, WordPlacementsDatabaseModel } from './spacetime_bridge';
+
+// Infer the type from the database model
+type Board = Infer<typeof BoardDatabaseModel>;
+type WordPlacement = Infer<typeof WordPlacementsDatabaseModel>;
+
+// Use in your components
+function BoardViewer({ board }: { board: Board }) {
+  return (
+    <div>
+      <h2>{board.name}</h2>
+      <p>Size: {board.rows} x {board.cols}</p>
+      <p>Created by: {board.createdBy.toHexString()}</p>
+    </div>
+  );
+}
+
+// Use in loaders or API functions
+async function loadBoard(boardId: string): Promise<Board | null> {
+  const boards = await ssql<Board>(`SELECT * FROM board WHERE id = '${boardId}'`);
+  return boards[0] || null;
+}
+```
+
+**Benefits:**
+- Type safety throughout your application
+- Auto-completion in your IDE
+- Compile-time error checking
+- Refactoring support
+
+## OIDC Authentication
+
+For production applications, integrate OpenID Connect (OIDC) authentication:
+
+```typescript
+import { AuthProvider, useAuth } from 'react-oidc-context';
+import { SpacetimeDBProvider } from 'spacetimedb/react';
+import { DbConnection } from './spacetime_bridge';
+
+function Root() {
+  const oidcConfig = {
+    authority: 'https://your-auth-provider.com',
+    client_id: 'your-client-id',
+    redirect_uri: window.location.origin,
+    scope: 'openid profile email',
+  };
+  
+  function onSigninCallback() {
+    // Clean up the URL after sign-in
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+  
+  return (
+    <AuthProvider {...oidcConfig} onSigninCallback={onSigninCallback}>
+      <App />
+    </AuthProvider>
+  );
+}
+
+function App() {
+  const auth = useAuth();
+
+  // Auto-signin hook (implement as needed)
+  useEffect(() => {
+    if (!auth.isAuthenticated && !auth.isLoading) {
+      auth.signinRedirect();
+    }
+  }, [auth]);
+
+  if (auth.isLoading) {
+    return <div>Loading authentication...</div>;
+  }
+
+  if (auth.error) {
+    return <div>Authentication error: {auth.error.message}</div>;
+  }
+
+  if (!auth.isAuthenticated) {
+    return <div>Redirecting to login...</div>;
+  }
+
+  // Configure SpacetimeDB with OIDC token
+  const connectionBuilder = DbConnection.builder()
+    .withUri('wss://your-spacetime-instance.com')
+    .withModuleName('your-module')
+    .withToken(auth.user?.access_token)
+    .onConnect(console.log)
+    .onDisconnect(console.log)
+    .onConnectError(console.log);
+
+  return (
+    <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
+      <div className="App">
+        <header>
+          Welcome, {auth.user?.profile.name} (id: {auth.user?.profile.sub})!
+          <button onClick={() => auth.signoutRedirect()}>Sign Out</button>
+        </header>
+        <MainApp />
+      </div>
+    </SpacetimeDBProvider>
+  );
+}
+```
+
+**OIDC Integration Steps:**
+1. Install `react-oidc-context`: `npm install react-oidc-context`
+2. Configure your OIDC provider settings
+3. Wrap your app with `AuthProvider`
+4. Use `useAuth()` hook to access authentication state
+5. Pass OIDC token to SpacetimeDB connection
+
+## SpacetimeDB Type Mappings
+
+SpacetimeDB uses SATS (Spacetime Algebraic Type System) which maps to TypeScript and Rust types:
+
+### Primitive Types
+
+| SpacetimeDB | TypeScript | Rust | Description |
+|-------------|------------|------|-------------|
+| `Bool` | `boolean` | `bool` | Boolean value |
+| `I8` | `number` | `i8` | 8-bit signed integer |
+| `U8` | `number` | `u8` | 8-bit unsigned integer |
+| `I16` | `number` | `i16` | 16-bit signed integer |
+| `U16` | `number` | `u16` | 16-bit unsigned integer |
+| `I32` | `number` | `i32` | 32-bit signed integer |
+| `U32` | `number` | `u32` | 32-bit unsigned integer |
+| `I64` | `bigint` | `i64` | 64-bit signed integer |
+| `U64` | `bigint` | `u64` | 64-bit unsigned integer |
+| `F32` | `number` | `f32` | 32-bit float |
+| `F64` | `number` | `f64` | 64-bit float |
+| `String` | `string` | `String` | UTF-8 string |
+
+### Special Types
+
+| SpacetimeDB | TypeScript | Rust | Description |
+|-------------|------------|------|-------------|
+| `Identity` | `Identity` | `Identity` | Unique user identifier |
+| `Timestamp` | `Timestamp` | `Timestamp` | Microseconds since Unix epoch |
+| `Vec<T>` | `T[]` | `Vec<T>` | Array/List of type T |
+| `Option<T>` | `T \| null` | `Option<T>` | Optional value |
+
+### Complex Types
+
+```typescript
+// Product type (struct/object)
+interface GameSession {
+  id: bigint;           // U64
+  boardId: string;      // String
+  playedBy: Identity;   // Identity
+  startedAt: Timestamp; // Timestamp
+  score: number;        // U32
+}
+
+// Array type
+const words: string[] = ['HELLO', 'WORLD'];
+
+// Optional type
+const message: string | null = null;
+```
+
+### Working with Special Types
+
+```typescript
+import { Identity, Timestamp } from 'spacetimedb';
+
+// Identity
+const identity = Identity.fromString('hex-string-here');
+console.log(identity.toHexString());
+console.log(identity.isEqual(otherIdentity));
+
+// Timestamp
+const timestamp = new Timestamp(BigInt(Date.now() * 1000)); // microseconds
+console.log(timestamp.toDate());
+
+// BigInt (for I64/U64)
+const largeNumber: bigint = 9007199254740991n;
+```
+
+## Best Practices
+
+### 1. Connection Management
+
+- Create the connection builder once at the application root
+- Reuse the same connection throughout your app
+- Store tokens in `sessionStorage`, identities in `localStorage`
+- Always handle connection errors gracefully
+
+### 2. Type Safety
+
+- Always use the `Infer` utility for extracting types
+- Avoid using `any` types
+- Let TypeScript catch errors at compile time
+
+```typescript
+// Good
+type Board = Infer<typeof BoardDatabaseModel>;
+function updateBoard(board: Board) { /* ... */ }
+
+// Avoid
+function updateBoard(board: any) { /* ... */ }
+```
+
+### 3. Error Handling
+
+- Always wrap reducer calls in try-catch blocks
+- Provide user feedback for errors
+- Log errors for debugging
+
+```typescript
+const saveWord = useReducer(reducers.saveWord);
+
+const handleSave = async () => {
+  try {
+    await saveWord(boardId, word);
+    setMessage('Word saved successfully');
+  } catch (error) {
+    console.error('Save failed:', error);
+    setMessage('Failed to save word');
+  }
+};
+```
+
+### 4. Performance
+
+- Use filters (`where`) to limit data fetching
+- Only subscribe to tables you need
+- Consider using `useMemo` for expensive computations on table data
+
+```typescript
+const [boards] = useTable(tables.board, where(eq('active', true)));
+
+const sortedBoards = useMemo(() => {
+  return [...boards].sort((a, b) => b.createdAt - a.createdAt);
+}, [boards]);
+```
+
+### 5. Code Organization
+
+Organize your SpacetimeDB integration:
+
+```
+app/
+├── spacetime_bridge/          # Generated files (do not edit)
+│   ├── index.ts
+│   ├── board_table.ts
+│   └── ...
+├── hooks/
+│   ├── useGameSession.ts      # Custom hooks wrapping SpacetimeDB hooks
+│   └── useBoard.ts
+└── service/
+    └── api.ts                 # API utilities (SSQL queries, etc.)
+```
+
+### 6. Testing
+
+- Mock the SpacetimeDB connection in tests
+- Test reducer error handling
+- Test component behavior with different connection states
+
+### 7. Bridge Generation
+
+Always regenerate bindings when your database schema changes:
+
+```bash
+# After updating your SpacetimeDB module
+spacetime bridge generate --out-dir ./app/spacetime_bridge --lang typescript
+```
+
+Add this to your development workflow or CI/CD pipeline.
+
+## Summary
+
+SpacetimeDB provides a powerful way to build real-time, multiplayer React applications:
+
+1. **Generate bindings** with `spacetime bridge`
+2. **Configure connection** with authentication and error handling
+3. **Wrap your app** with `SpacetimeDBProvider`
+4. **Use hooks** to access data and call reducers
+5. **Leverage TypeScript** for type safety throughout
+6. **Follow best practices** for maintainable code
+
+For more information, visit:
+- [SpacetimeDB Documentation](https://spacetimedb.com/docs)
+- [SpacetimeDB GitHub](https://github.com/clockworklabs/SpacetimeDB)
+- [Example Applications](https://github.com/clockworklabs/SpacetimeDB/tree/master/examples)
