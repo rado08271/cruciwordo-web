@@ -9,13 +9,14 @@ This document describes how the SpacetimeDB client functions and integrates with
 3. [Initial Setup](#initial-setup)
 4. [Connection Configuration](#connection-configuration)
 5. [SpacetimeDBProvider Setup](#spacetimedbprovider-setup)
-6. [Using Hooks](#using-hooks)
-7. [Working with Reducers](#working-with-reducers)
-8. [Querying Tables](#querying-tables)
-9. [Type Inference](#type-inference)
-10. [OIDC Authentication](#oidc-authentication)
-11. [SpacetimeDB Type Mappings](#spacetimedb-type-mappings)
-12. [Best Practices](#best-practices)
+6. [SSR with React Router v7](#ssr-with-react-router-v7)
+7. [Using Hooks](#using-hooks)
+8. [Working with Reducers](#working-with-reducers)
+9. [Querying Tables](#querying-tables)
+10. [Type Inference](#type-inference)
+11. [OIDC Authentication](#oidc-authentication)
+12. [SpacetimeDB Type Mappings](#spacetimedb-type-mappings)
+13. [Best Practices](#best-practices)
 
 ## Core Concepts
 
@@ -145,6 +146,259 @@ The provider:
 - Establishes the database connection
 - Makes the connection available to all child components via hooks
 - Manages connection lifecycle and reconnection
+
+## SSR with React Router v7
+
+When using SpacetimeDB with React Router v7 (or other SSR frameworks), you need to handle both server-side data fetching and client-side real-time updates.
+
+### Key Concepts
+
+**Two Data Paths:**
+1. **Server-side (SSR)**: Use HTTP API for initial data in loaders (for SEO, OpenGraph meta tags)
+2. **Client-side**: Use WebSocket connection for real-time updates after hydration
+
+**Provider Placement:**
+- Place `SpacetimeDBProvider` in **route components**, not in `root.tsx` Layout
+- The Layout runs on both server and client, but WebSocket connections only work client-side
+- Routes are client-side only, making them safe for the provider
+
+### Server-Side Data Fetching (Loaders)
+
+Use the HTTP API with SQL queries in loaders to fetch data for SSR and metadata:
+
+```typescript
+// app/service/api.ts
+import { Identity, Timestamp, type Infer } from "spacetimedb";
+
+/**
+ * Execute a SQL query against SpacetimeDB HTTP API
+ * Use this in loaders for SSR data fetching
+ */
+export const ssql = async <T = any>(sql: string): Promise<T[]> => {
+  // Generate temporary identity for the request
+  const identityResponse = await fetch(
+    `http://localhost:3000/v1/identity`,
+    { method: "POST" }
+  );
+  
+  if (!identityResponse.ok) {
+    throw new Error("Could not generate identity");
+  }
+  
+  const { identity, token } = await identityResponse.json();
+  
+  // Execute SQL query
+  const sqlResponse = await fetch(
+    `http://localhost:3000/v1/database/cruciwordo/sql`,
+    { 
+      method: "POST", 
+      headers: { "Authorization": `Bearer ${token}` },
+      body: sql
+    }
+  );
+  
+  if (!sqlResponse.ok) {
+    throw new Error("Could not process your request");
+  }
+  
+  const responseJson = await sqlResponse.json();
+  
+  // Parse SATS-JSON response (implementation details omitted)
+  return parseSatsJsonResponse<T>(responseJson);
+};
+```
+
+### Example: Route with Loader and Provider
+
+Here's how to structure a route that fetches data server-side and enables real-time updates client-side:
+
+```typescript
+// app/routes/play.tsx
+import { data } from "react-router";
+import { SpacetimeDBProvider, useTable, where, eq } from "spacetimedb/react";
+import { DbConnection, BoardDatabaseModel, WordPlacementsDatabaseModel } from "~/spacetime_bridge";
+import { ssql } from "~/service/api";
+import type { Route } from "./+types/play";
+import type { Infer } from "spacetimedb";
+
+// Loader runs on server - use HTTP API for SSR
+export async function loader({ params }: Route.LoaderArgs) {
+  const boardId = params.boardId;
+  
+  try {
+    // Fetch data via HTTP for SSR and metadata
+    const boards = await ssql<Infer<typeof BoardDatabaseModel>>(
+      `SELECT * FROM board WHERE id = '${boardId}'`
+    );
+    const words = await ssql<Infer<typeof WordPlacementsDatabaseModel>>(
+      `SELECT * FROM word WHERE board_id = '${boardId}'`
+    );
+    
+    return { 
+      boardModel: boards[0], 
+      wordsModel: words 
+    };
+  } catch (e: any) {
+    throw data(e.message, { status: 404 });
+  }
+}
+
+// Meta function for OpenGraph tags - uses loader data
+export function meta({ matches }: Route.MetaArgs) {
+  const { boardModel, wordsModel } = matches
+    .find((route) => route.id === 'routes/play')
+    ?.loaderData as LoaderDataType;
+  
+  if (!boardModel || !wordsModel) return [];
+  
+  return [
+    { title: `Play ${boardModel.rows}x${boardModel.cols} Puzzle | Cruciwordo` },
+    { 
+      name: "description", 
+      content: `Join a ${boardModel.rows}x${boardModel.cols} puzzle with ${wordsModel.length} words.` 
+    },
+    { property: "og:title", content: `Play Puzzle | Cruciwordo` },
+    { property: "og:description", content: "Collaborate in real-time to find words!" },
+    { property: "og:image", content: `https://cruciwordo.com/og-image.jpg` },
+  ];
+}
+
+// Component runs on client - use WebSocket for real-time updates
+export default function Play({ params, loaderData }: Route.ComponentProps) {
+  const boardId = params.boardId;
+  
+  // Create connection builder (client-side only)
+  const connectionBuilder = DbConnection.builder()
+    .withUri('ws://localhost:3000')
+    .withModuleName('cruciwordo')
+    .withToken(sessionStorage.getItem('auth_token') || undefined)
+    .onConnect((conn, identity, token) => {
+      sessionStorage.setItem('auth_token', token);
+    })
+    .onDisconnect(() => {
+      console.log('Disconnected');
+    })
+    .onConnectError((error) => {
+      console.error('Connection error:', error);
+    });
+  
+  return (
+    <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
+      <PlayLayout boardId={boardId} initialData={loaderData} />
+    </SpacetimeDBProvider>
+  );
+}
+
+// Child component uses hooks for real-time updates
+function PlayLayout({ boardId, initialData }) {
+  // Subscribe to real-time table updates
+  const [boards, isLoaded] = useTable(
+    'board',
+    where(eq('id', boardId))
+  );
+  
+  const [words] = useTable(
+    'word',
+    where(eq('boardId', boardId))
+  );
+  
+  // Use initialData from loader while connecting
+  const board = boards.find(b => b.id === boardId) || initialData.boardModel;
+  const currentWords = words.length > 0 ? words : initialData.wordsModel;
+  
+  if (!board) {
+    return <div>Loading board...</div>;
+  }
+  
+  return (
+    <div>
+      <h1>Board: {board.rows}x{board.cols}</h1>
+      <p>Words found: {currentWords.filter(w => w.found).length}/{currentWords.length}</p>
+      {/* Real-time game UI */}
+    </div>
+  );
+}
+```
+
+### Provider Placement Guidelines
+
+**✅ DO: Place in route components**
+```typescript
+// app/routes/game.tsx
+export default function Game() {
+  const connectionBuilder = DbConnection.builder()...;
+  
+  return (
+    <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
+      <GameContent />
+    </SpacetimeDBProvider>
+  );
+}
+```
+
+**❌ DON'T: Place in root Layout**
+```typescript
+// app/root.tsx - AVOID THIS
+export function Layout({ children }) {
+  // This runs on server and client - WebSocket won't work on server
+  return (
+    <html>
+      <body>
+        <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
+          {children}
+        </SpacetimeDBProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### Handling Client-Only Code
+
+If you need the provider at a higher level, use client-only guards:
+
+```typescript
+// app/routes/home.tsx
+export default function Home() {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  const connectionBuilder = DbConnection.builder()
+    .withUri('ws://localhost:3000')
+    .withModuleName('cruciwordo')
+    .onConnect(console.log);
+  
+  // Don't render provider until we're on the client
+  if (!isClient) {
+    return <div>Loading...</div>;
+  }
+  
+  return (
+    <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
+      <HomeContent />
+    </SpacetimeDBProvider>
+  );
+}
+```
+
+### Best Practices for SSR
+
+1. **Use loaders for SEO-critical data**: OpenGraph tags, initial page content
+2. **Use WebSocket for real-time updates**: Live game state, multiplayer interactions
+3. **Provide fallback data**: Show loader data while WebSocket connects
+4. **Handle hydration mismatches**: Ensure server HTML matches client initial render
+5. **Guard WebSocket code**: Only create connections client-side
+6. **Cache loader data**: React Router caches loader results automatically
+
+### Performance Considerations
+
+- **Initial page load**: Fast because loader data is included in SSR HTML
+- **Real-time updates**: Seamless after WebSocket connects
+- **SEO-friendly**: Search engines see complete data from loaders
+- **Progressive enhancement**: App works even if WebSocket fails (falls back to loader data)
 
 ## Using Hooks
 
