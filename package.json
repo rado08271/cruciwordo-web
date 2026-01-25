@@ -6,7 +6,11 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "typecheck": "react-router typegen && tsc",
+    "lint": "eslint app --ext .ts,.tsx",
+    "lint:fix": "eslint app --ext .ts,.tsx --fix",
+    "format": "prettier --write \"app/**/*.{ts,tsx,css,json}\"",
+    "format:check": "prettier --check \"app/**/*.{ts,tsx,css,json}\""
   },
   "dependencies": {
     "@excaliburjs/plugin-jsfxr": "^0.32.0",
@@ -43,7 +47,16 @@
     "@types/prop-types": "^15.7.15",
     "@types/react": "^19.2.3",
     "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.53.1",
+    "@typescript-eslint/parser": "^8.53.1",
     "autoprefixer": "^10.4.23",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^17.1.0",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.0",
     "vite-tsconfig-paths": "^6.0.3"
