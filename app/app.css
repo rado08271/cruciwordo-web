@@ -1,59 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&family=League+Gothic&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&family=League+Gothic&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap");
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  --font-sans: "Albert Sans", "Noto Sans", "League Gothic", sans-serif;
+  --font-header: "League Gothic", sans-serif;
+  --font-noto: "Noto Sans", sans-serif;
+}
 
-@layer {
-  .no-gradient {
-    @apply bg-transparent;
-  }
+@utility no-gradient {
+  background: transparent;
+}
 
-  .has-gradient {
-    @apply bg-white dark:bg-gray-950;
-    @apply from-red-300 to-violet-400;
-    @apply dark:from-blue-600 dark:to-slate-600;
-    @apply bg-gradient-to-r;
-  }
+@utility has-gradient {
+  @apply bg-white dark:bg-gray-950;
+  @apply from-red-300 to-violet-400;
+  @apply dark:from-blue-600 dark:to-slate-600;
+  @apply bg-linear-to-r;
 }
 
 :root {
   font-family: "Albert Sans", "Noto Sans", "League Gothic", sans-serif;
-    --is-gradient: gradient;
+  --is-gradient: gradient;
 }
 
 html,
 body {
   @apply no-gradient;
-  /*@apply has-gradient;*/
+  /* @apply has-gradient; */
   @apply w-full h-full;
   @apply p-0 m-0 absolute;
-
-  /*@media (prefers-color-scheme: dark) {*/
-  /*  color-scheme: dark;*/
-  /*}*/
 
   color-scheme: light;
   overflow-x: hidden;
 
   background: url("./assets/concrete_wall_with_blue_sky.jpeg");
-  -webkit-animation: scroll-bg 7s ease infinite;
-  -moz-animation: scroll-bg 7s ease infinite;
   animation: scroll-bg 7s ease infinite;
 }
 
-@-webkit-keyframes scroll-bg {
-  0%{background-position:10% 0}
-  50%{background-position:91% 100%}
-  100%{background-position:10% 0}
-}
-@-moz-keyframes scroll-bg {
-  0%{background-position:10% 0}
-  50%{background-position:91% 100%}
-  100%{background-position:10% 0}
-}
 @keyframes scroll-bg {
-  0%{background-position:10% 0}
-  50%{background-position:91% 100%}
-  100%{background-position:10% 0}
+  0% {
+    background-position: 10% 0;
+  }
+  50% {
+    background-position: 91% 100%;
+  }
+  100% {
+    background-position: 10% 0;
+  }
 }

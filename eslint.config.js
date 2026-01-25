@@ -20,6 +20,7 @@ export default [
       prettier,
     },
     rules: {
+      unknownAtRules: "off",
       "prettier/prettier": "warn",
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "react-hooks/rules-of-hooks": "error",
