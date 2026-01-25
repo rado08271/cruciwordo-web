@@ -214,6 +214,7 @@ Here's how to structure a route that fetches data server-side and enables real-t
 
 ```typescript
 // app/routes/play.tsx
+import { useState, useEffect, useMemo } from "react";
 import { data } from "react-router";
 import { SpacetimeDBProvider, useTable, where, eq } from "spacetimedb/react";
 import { DbConnection, BoardDatabaseModel, WordPlacementsDatabaseModel } from "~/spacetime_bridge";
@@ -266,21 +267,36 @@ export function meta({ matches }: Route.MetaArgs) {
 // Component runs on client - use WebSocket for real-time updates
 export default function Play({ params, loaderData }: Route.ComponentProps) {
   const boardId = params.boardId;
+  const [isClient, setIsClient] = useState(false);
+  
+  // Ensure we're on the client before accessing sessionStorage
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   // Create connection builder (client-side only)
-  const connectionBuilder = DbConnection.builder()
-    .withUri('ws://localhost:3000')
-    .withModuleName('cruciwordo')
-    .withToken(sessionStorage.getItem('auth_token') || undefined)
-    .onConnect((conn, identity, token) => {
-      sessionStorage.setItem('auth_token', token);
-    })
-    .onDisconnect(() => {
-      console.log('Disconnected');
-    })
-    .onConnectError((error) => {
-      console.error('Connection error:', error);
-    });
+  const connectionBuilder = useMemo(() => {
+    if (!isClient) return null;
+    
+    return DbConnection.builder()
+      .withUri('ws://localhost:3000')
+      .withModuleName('cruciwordo')
+      .withToken(sessionStorage.getItem('auth_token') || undefined)
+      .onConnect((conn, identity, token) => {
+        sessionStorage.setItem('auth_token', token);
+      })
+      .onDisconnect(() => {
+        console.log('Disconnected');
+      })
+      .onConnectError((error) => {
+        console.error('Connection error:', error);
+      });
+  }, [isClient]);
+  
+  // Wait for client-side hydration before connecting
+  if (!isClient || !connectionBuilder) {
+    return <PlayLayout boardId={boardId} initialData={loaderData} />;
+  }
   
   return (
     <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
