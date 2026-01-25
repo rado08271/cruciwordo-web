@@ -114,7 +114,7 @@ type PlayLayoutProps = {
 };
 
 const Load = () => (
-  <div className={"absolute flex w-screen h-screen backdrop-blur justify-center items-center"}>
+  <div className={"absolute flex w-screen h-screen backdrop-blur-sm justify-center items-center"}>
     <Loading />
   </div>
 );

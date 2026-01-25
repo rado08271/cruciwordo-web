@@ -1,46 +1,46 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-    IoArrowForward,
-    IoCogSharp,
-    IoCopy,
-    IoGridSharp,
-    IoKeySharp,
-    IoLanguageSharp,
-    IoShareSocial
+  IoArrowForward,
+  IoCogSharp,
+  IoCopy,
+  IoGridSharp,
+  IoKeySharp,
+  IoLanguageSharp,
+  IoShareSocial,
 } from "react-icons/io5";
 import MoveGrid from "~/components/grid/move-grid";
 import Loading from "~/components/common/loading/loading";
-import {useNavigate} from "react-router";
-import {Identity} from "spacetimedb";
-import {tables, type BoardDatabaseModel, type DbConnection} from "@spacetime";
+import { useNavigate } from "react-router";
+import { Identity } from "spacetimedb";
+import { tables, type BoardDatabaseModel, type DbConnection } from "@spacetime";
 import type Cell from "~/types/cell";
 import { useSpacetimeDB, useTable } from "spacetimedb/react";
 
-type SupportedLangType = { language: string, i18n: string, id: string }
+type SupportedLangType = { language: string; i18n: string; id: string };
 type SupportedGridSize = {
-    size: string,
-    rows: number,
-    cols: number,
-    id: string,
-    max_solution?: number,
-    average_words?: number
-}
+  size: string;
+  rows: number;
+  cols: number;
+  id: string;
+  max_solution?: number;
+  average_words?: number;
+};
 
-type TabName = 'SETTINGS' | 'PREVIEW'
+type TabName = "SETTINGS" | "PREVIEW";
 
 const SUPPORTED_LANG: SupportedLangType[] = [
-    {language: 'English', i18n: 'en', id: 'langauge_en'},
-    {language: 'Slovak', i18n: 'sk', id: 'langauge_sk'},
-    // {language: 'Spanish', i18n: 'es', id: 'langauge_es'}
-]
+  { language: "English", i18n: "en", id: "langauge_en" },
+  { language: "Slovak", i18n: "sk", id: "langauge_sk" },
+  // {language: 'Spanish', i18n: 'es', id: 'langauge_es'}
+];
 const SUPPORTED_GRID: SupportedGridSize[] = [
-    {size: '6x6', cols: 6, rows: 6, id: 'grid_6', max_solution: 12},
-    {size: '9x9', cols: 9, rows: 9, id: 'grid_9', max_solution: 25},
-    {size: '13x13', cols: 13, rows: 13, id: 'grid_13', max_solution: 38},
-    {size: '17x17', cols: 17, rows: 17, id: 'grid_17', max_solution: 52},
-    {size: '20x20', cols: 20, rows: 20, id: 'grid_20', max_solution: 74},
-    {size: '25x25', cols: 25, rows: 25, id: 'grid_25', max_solution: 100},
-]
+  { size: "6x6", cols: 6, rows: 6, id: "grid_6", max_solution: 12 },
+  { size: "9x9", cols: 9, rows: 9, id: "grid_9", max_solution: 25 },
+  { size: "13x13", cols: 13, rows: 13, id: "grid_13", max_solution: 38 },
+  { size: "17x17", cols: 17, rows: 17, id: "grid_17", max_solution: 52 },
+  { size: "20x20", cols: 20, rows: 20, id: "grid_20", max_solution: 74 },
+  { size: "25x25", cols: 25, rows: 25, id: "grid_25", max_solution: 100 },
+];
 
 // const CreateGrid = () => {
 //     const [lang, onSelectLang] = useState<SupportedLangType>(SUPPORTED_LANG[0])
@@ -48,7 +48,6 @@ const SUPPORTED_GRID: SupportedGridSize[] = [
 //     const [solution, onSetSolution] = useState("")
 //     const [message, onSetMessage] = useState("")
 //     const [tabName, setTabName] = useState<TabName>('SETTINGS')
-    
 
 //     const nav = useNavigate()
 
@@ -106,15 +105,15 @@ const SUPPORTED_GRID: SupportedGridSize[] = [
 
 //     return (
 //         <>
-//             {isLoading && <div className={'absolute flex w-screen h-screen backdrop-blur justify-center items-center'}>
+//             {isLoading && <div className={'absolute flex w-screen h-screen backdrop-blur-sm justify-center items-center'}>
 //                 <Loading/>
 //             </div>}
-//             {newBoard && <div className={'absolute flex w-screen h-screen backdrop-blur justify-center items-center'}>
+//             {newBoard && <div className={'absolute flex w-screen h-screen backdrop-blur-sm justify-center items-center'}>
 //                 <section className={'p-4 bg-white drop-shadow-xl rounded-xl text-stone-600 flex flex-col gap-2'}>
 //                     <h1 className={'font-header text-center text-3xl'}>Board was created</h1>
 //                     <div className={'relative flex flex-col text-stone-600 items-center gap-4'}>
 //                         <div
-//                             className={'flex flex-row justify-center items-center gap-2 border-sky-300 border-2 py-1 px-2 rounded'}>
+//                             className={'flex flex-row justify-center items-center gap-2 border-sky-300 border-2 py-1 px-2 rounded-sm'}>
 //                             {/*<MoveGrid grid={generateGrid} />*/}
 //                             <p className={'select-all text-sm '}>{import.meta.env.VITE_DEFAULT_URL}/play/{newBoard?.id}</p>
 //                             <div className={''}>
@@ -127,11 +126,11 @@ const SUPPORTED_GRID: SupportedGridSize[] = [
 //                                     }, 3000)
 //                                 }} className={'cursor-pointer transition duration-300 ease-in-out hover:text-sky-500'}/>
 //                                 {isCopied && <div
-//                                     className={'absolute w-full text-xs left-0 right-0 top-0 text-center -translate-y-full p-1 backdrop-blur bg-gradient-to-br from-slate-200 to-slate-50 rounded bg-opacity-0 transition duration-1000 ease-in-out'}>Copied
+//                                     className={'absolute w-full text-xs left-0 right-0 top-0 text-center -translate-y-full p-1 backdrop-blur-sm bg-gradient-to-br from-slate-200 to-slate-50 rounded-sm bg-opacity-0 transition duration-1000 ease-in-out'}>Copied
 //                                     to clipboard</div>}
 //                             </div>
 //                         </div>
-//                         <div className={'flex flex-row text-2xl justify-around w-full items-center rounded'}>
+//                         <div className={'flex flex-row text-2xl justify-around w-full items-center rounded-sm'}>
 //                             <IoShareSocial
 //                                 className={'text-xl cursor-pointer transition duration-300 ease-in-out hover:text-sky-500 hover:scale-125'}/>
 //                             <IoArrowForward onClick={() => {
@@ -146,7 +145,6 @@ const SUPPORTED_GRID: SupportedGridSize[] = [
 //                 className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center p-0 md:p-24'}>
 //                 <form onSubmit={(event) => {
 //                     event.preventDefault();
-
 
 //                     createBoard(message, gridSize.rows, gridSize.cols, lang.i18n)
 //                 }}
@@ -263,7 +261,7 @@ const SUPPORTED_GRID: SupportedGridSize[] = [
 // };
 
 const CreateGrid = () => {
-    return <div>Create Grid - coming soon!</div>
-}
+  return <div>Create Grid - coming soon!</div>;
+};
 
-export default CreateGrid
+export default CreateGrid;

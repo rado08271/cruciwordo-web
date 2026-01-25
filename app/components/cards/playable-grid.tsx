@@ -1,6 +1,6 @@
-"use client"
-import { useCallback, useEffect, useState } from 'react';
-import ConfettiExplosion, { type ConfettiProps } from 'react-confetti-explosion';
+"use client";
+import { useCallback, useEffect, useState } from "react";
+import ConfettiExplosion, { type ConfettiProps } from "react-confetti-explosion";
 import Loading from "~/components/common/loading/loading";
 import type Board from "~/types/board";
 import type Cell from "~/types/cell";
@@ -15,20 +15,20 @@ import WordsList from "~/components/lists/words-list";
 import { getDirectionVector } from "~/types/direction";
 import Player from "~/types/player";
 import Word from "~/types/word";
-import { useSpacetimeDB } from 'spacetimedb/react';
-import type { DbConnection } from '~/spacetime_bridge';
+import { useSpacetimeDB } from "spacetimedb/react";
+import type { DbConnection } from "~/spacetime_bridge";
 
 const confettiProps: ConfettiProps = {
-    force: 0.8,
-    duration: 3000,
-    particleCount: 250,
-    width: 1600,
-}
+  force: 0.8,
+  duration: 3000,
+  particleCount: 250,
+  width: 1600,
+};
 
 type Props = {
-    board: Board
-    words: Word[]
-}
+  board: Board;
+  words: Word[];
+};
 
 // const PlayableGrid = ({board, words}: Props) => {
 //     const [gameWon, setGameWon] = useState(false);
@@ -177,7 +177,7 @@ type Props = {
 //             {/* {
 //                 isLoading &&
 //                 <div
-//                     className={'absolute flex flex-col w-screen h-screen backdrop-blur justify-center items-center z-10 text-center'}>
+//                     className={'absolute flex flex-col w-screen h-screen backdrop-blur-sm justify-center items-center z-10 text-center'}>
 //                     <Loading/>
 //                 </div>
 //             } */}
@@ -185,7 +185,7 @@ type Props = {
 //             {
 //                 (gameWon && !showSolution) &&
 //                 <div
-//                     className={'absolute flex flex-col gap-8 w-screen h-screen backdrop-blur justify-center items-center z-10 text-center'}>
+//                     className={'absolute flex flex-col gap-8 w-screen h-screen backdrop-blur-sm justify-center items-center z-10 text-center'}>
 //                     <h1 className={'text-stone-500 font-header'}>Congratulations</h1>
 //                     <FaTrophy className={'text-yellow-400'}/>
 //                     <h4 className={'text-stone-500 text-xl font-medium'}>Game was already finished</h4>
@@ -195,7 +195,6 @@ type Props = {
 //                     <ConfettiExplosion {...confettiProps} className={'relative z-50'}/>
 //                 </div>
 //             }
-
 
 //                 <div
 //                     className={'min-w-screen min-h-screen bg-sky-500 flex flex-col justify-center items-center md:p-24 z-0'}>
@@ -224,7 +223,7 @@ type Props = {
 // };
 
 const PlayableGrid = () => {
-    return <div>Playable Grid - coming soon!</div>
-}
+  return <div>Playable Grid - coming soon!</div>;
+};
 
 export default PlayableGrid;
