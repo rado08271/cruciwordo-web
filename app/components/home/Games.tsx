@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { tables } from "@spacetime";
+import { useTable } from "spacetimedb/react";
 import man_standing from "~/assets/man-standing-pointing.png";
 import woman_walking from "~/assets/woman-standing-walking.png";
 
-const Games = () => {
-  const [allBoards, setAllBoards] = useState(0);
+export const Games = () => {
+  const [allBoards] = useTable(tables.board, {
+    onInsert: console.info,
+    onUpdate: console.warn,
+    onDelete: console.error,
+  });
 
   return (
     <section
@@ -12,7 +17,7 @@ const Games = () => {
       }
     >
       <h2 className={"text-5xl font-header z-10"}>We have made</h2>
-      <h2 className={"text-5xl font-header text-amber-400"}>{allBoards}</h2>
+      <h2 className={"text-5xl font-header text-amber-400"}>{allBoards.length}</h2>
       <h2 className={"text-5xl font-header"}>games already!</h2>
       <img
         src={man_standing}
@@ -27,5 +32,3 @@ const Games = () => {
     </section>
   );
 };
-
-export default Games;
