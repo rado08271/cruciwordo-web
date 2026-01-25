@@ -609,10 +609,13 @@ import { DbConnection } from './spacetime_bridge';
 
 function Root() {
   const oidcConfig = {
-    authority: 'https://your-auth-provider.com',
-    client_id: 'your-client-id',
-    redirect_uri: window.location.origin,
+    authority: 'https://auth.spacetimedb.com/oidc',
+    client_id: import.meta.env.VITE_OIDC_CLIENT_ID,
+    redirect_uri: `${window.location.origin}/callback`, // Where the user is redirected after login
+    post_logout_redirect_uri: window.location.origin, // Where the user is redirected after logout
     scope: 'openid profile email',
+    response_type: 'code',
+    automaticSilentRenew: true,
   };
   
   function onSigninCallback() {
@@ -630,12 +633,8 @@ function Root() {
 function App() {
   const auth = useAuth();
 
-  // Auto-signin hook (implement as needed)
-  useEffect(() => {
-    if (!auth.isAuthenticated && !auth.isLoading) {
-      auth.signinRedirect();
-    }
-  }, [auth]);
+  // Automatically sign in the user
+  useAutoSignin();
 
   if (auth.isLoading) {
     return <div>Loading authentication...</div>;
@@ -682,23 +681,6 @@ function App() {
 ## SpacetimeDB Type Mappings
 
 SpacetimeDB uses SATS (Spacetime Algebraic Type System) which maps to TypeScript and Rust types:
-
-### Primitive Types
-
-| SpacetimeDB | TypeScript | Rust | Description |
-|-------------|------------|------|-------------|
-| `Bool` | `boolean` | `bool` | Boolean value |
-| `I8` | `number` | `i8` | 8-bit signed integer |
-| `U8` | `number` | `u8` | 8-bit unsigned integer |
-| `I16` | `number` | `i16` | 16-bit signed integer |
-| `U16` | `number` | `u16` | 16-bit unsigned integer |
-| `I32` | `number` | `i32` | 32-bit signed integer |
-| `U32` | `number` | `u32` | 32-bit unsigned integer |
-| `I64` | `bigint` | `i64` | 64-bit signed integer |
-| `U64` | `bigint` | `u64` | 64-bit unsigned integer |
-| `F32` | `number` | `f32` | 32-bit float |
-| `F64` | `number` | `f64` | 64-bit float |
-| `String` | `string` | `String` | UTF-8 string |
 
 ### Special Types
 
